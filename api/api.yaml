@@ -1,0 +1,160 @@
+openapi: "3.0.0"
+info:
+  version: "1.0.0"
+  title: Curriculum Vitae API
+  license:
+    name: MIT
+servers:
+  - url: "http://api.cvapp.com/v1"
+paths:
+  /experiences:
+    get:
+      summary: List all experiences
+      operationId: listExperiences
+      tags:
+        - Experiences
+      parameters:
+        - name: limit
+          in: query
+          description: Size of the page, maximum is 100, default is 25
+          required: false
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+            format: int32
+        - name: page
+          in: query
+          description: The page to return
+          required: false
+          schema:
+            type: integer
+            maximum: 999999
+            default: 1
+            format: int32
+      responses:
+        "200":
+          description: A paged array of pets
+          headers:
+            x-next:
+              description: A link to the next page of responses
+              schema:
+                type: string
+          content:
+            application/json:    
+              schema:
+                $ref: "#/components/schemas/Experiences"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Create an experience
+      operationId: createExperience
+      tags:
+        - Experiences
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateExperienceRequest"
+        required: true
+      responses:
+        "201":
+          description: Null response
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /experiences/{id}:
+    get:
+      summary: Info for a specific experience
+      operationId: getExperienceById
+      tags:
+        - Experiences
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the experience to retrieve
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Experience"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    ObjectId:
+      properties:
+        id:
+          type: integer
+          format: int64
+    Tag:
+      required: 
+        - tag
+      properties: 
+        tag:
+          type: string
+          maxLength: 50
+          format: ".{1,50}"
+    TagArray:
+      type: array
+      items:
+        $ref: "#/components/schemas/Tag"
+    TagArrayType:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+    ExperiencePayload:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+    Experiences:
+      type: array
+      maxItems: 100
+      items:
+        $ref: "#/components/schemas/Experience"
+    Experience:
+      allOf:
+      - $ref: '#/components/schemas/ObjectId'
+      - $ref: '#/components/schemas/ExperiencePayload'
+      - $ref: "#/components/schemas/TagArray"
+    CreateExperienceRequest:
+      allOf:
+      - $ref: "#/components/schemas/TagArrayType"
+      - $ref: '#/components/schemas/ExperiencePayload'
+    Error:
+      type: object
+      required:
+        - requestId
+        - code
+        - message
+      properties:
+        requestId:
+          type: string
+          format: uuid
+        code:
+          type: string
+          pattern: "[A-Z]{3}[0-9]{6}"
+        message:
+          type: string

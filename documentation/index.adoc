@@ -1,0 +1,12 @@
+= Go CV Cassandra
+
+== Cassandra tables
+
+[source,bash]
+----
+docker exec -it cassandra bash
+cqlsh
+
+use cv;
+select * from cv_experiences;
+----

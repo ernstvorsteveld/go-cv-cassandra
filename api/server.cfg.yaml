@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=configuration-schema.json
 package: api
 generate:
-  models: true
-output: cv-types.gen.go
+  gin-server: true
+  embedded-spec: true
+output: ../pkg/api/cv-server.gen.go

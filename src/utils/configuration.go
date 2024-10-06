@@ -18,6 +18,19 @@ type DBConfiguration struct {
 type CassandraConfiguration struct {
 	Keyspace string
 	Url      string
+	Retries  int8
+	Username string
+	Secret   SensitiveInfo
+}
+
+type SensitiveInfo string
+
+func (s SensitiveInfo) String() string {
+	return "****"
+}
+
+func (s SensitiveInfo) Value() string {
+	return string(s)
 }
 
 type ConfigurationManager interface {
@@ -32,6 +45,7 @@ func (c *Configuration) Read(fname string, ftype string) {
 
 const CASSANDRA_URL = "CASSANDRA_URL"
 const CASSANDRA_KEYSPACE = "CASSANDRA_KEYSPACE"
+const CASSANDRA_SECRET = "CASSANDRA_SECRET"
 
 func (c *Configuration) readFile(fname string, ftype string) {
 	viper.SetConfigName(fname)
@@ -58,6 +72,12 @@ func (c *Configuration) readEnvironment() {
 	if value != "" {
 		log.Infof("Keyspace environment used: %s.", value)
 		c.DB.Cassandra.Keyspace = value
+	}
+
+	value = os.Getenv(CASSANDRA_SECRET)
+	if value != "" {
+		log.Infof("Secret environment used: *********.")
+		c.DB.Cassandra.Secret = SensitiveInfo(value)
 	}
 }
 

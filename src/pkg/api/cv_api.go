@@ -7,5 +7,22 @@
 package api
 
 import (
+	"github.com/gin-gonic/gin"
 	_ "github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen"
 )
+
+func ListExperiences(c *gin.Context, params ListExperiencesParams) {
+
+}
+
+// Create an experience
+// (POST /experiences)
+func CreateExperience(c *gin.Context) {
+
+}
+
+// Info for a specific experience
+// (GET /experiences/{id})
+func GetExperienceById(c *gin.Context, id string) {
+
+}

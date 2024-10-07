@@ -1,1 +1,3 @@
 CREATE KEYSPACE testcv WITH replication = {'class':'SimpleStrategy', 'replication_factor':1};
+
+CREATE TABLE testcv.experiences(id text primary key, name text, tags set<text>);

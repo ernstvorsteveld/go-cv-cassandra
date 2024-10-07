@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
+	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/cassandra"
 )
@@ -45,6 +46,25 @@ func Test_should_create_experience(t *testing.T) {
 	})
 
 	log.Println(session.details)
+	log.Println(session.details)
+
+	d, err := session.Create(ExperienceDto{
+		name: "example1",
+		tags: []string{"a", "b"},
+	})
+	if err != nil {
+		log.Printf("failed to start container: %s", err)
+	}
+
+	m := map[string]interface{}{}
+	q := `SELECT * from testcv.experiences;`
+	itr := session.session.Query(q).Iter()
+	errors := true
+	for itr.MapScan(m) {
+		assert.Equal(t, m["id"].(string), d.id)
+		errors = false
+	}
+	assert.False(t, errors)
 
 	cassandraContainer.Terminate(ctx)
 }

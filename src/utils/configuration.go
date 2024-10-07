@@ -18,6 +18,7 @@ type DBConfiguration struct {
 type CassandraConfiguration struct {
 	Keyspace string
 	Url      string
+	Port     string
 	Retries  int8
 	Username string
 	Secret   SensitiveInfo

@@ -1,0 +1,1 @@
+CREATE KEYSPACE testcv WITH replication = {'class':'SimpleStrategy', 'replication_factor':1};

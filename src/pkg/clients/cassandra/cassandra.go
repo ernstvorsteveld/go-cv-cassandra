@@ -1,6 +1,8 @@
 package cassandra
 
 import (
+	"strconv"
+
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/gocql/gocql"
 	"github.com/google/uuid"
@@ -24,6 +26,7 @@ func ConnectDatabase(c *utils.CassandraConfiguration) *CassandraSession {
 		Username: c.Username,
 		Password: c.Secret.String(),
 	}
+	cluster.Port, _ = strconv.Atoi(c.Port)
 
 	session, err := cluster.CreateSession()
 	if err != nil {

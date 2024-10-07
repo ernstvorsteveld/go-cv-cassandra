@@ -12,12 +12,6 @@ type CassandraSession struct {
 	session *gocql.Session
 }
 
-type ConnectionDetails struct {
-	url      string
-	keyspace string
-	retries  int8
-}
-
 func ConnectDatabase(c *utils.CassandraConfiguration) *CassandraSession {
 
 	cluster := gocql.NewCluster(c.Url)

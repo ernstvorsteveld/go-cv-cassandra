@@ -52,7 +52,7 @@ func (siw *ServerInterfaceWrapper) ListExperiences(c *gin.Context) {
 
 	err = runtime.BindQueryParameter("form", true, false, "limit", c.Request.URL.Query(), &params.Limit)
 	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		siw.ErrorHandler(c, fmt.Errorf("invalid format for parameter limit: %w", err), http.StatusBadRequest)
 		return
 	}
 
@@ -60,7 +60,7 @@ func (siw *ServerInterfaceWrapper) ListExperiences(c *gin.Context) {
 
 	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
 	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+		siw.ErrorHandler(c, fmt.Errorf("invalid format for parameter page: %w", err), http.StatusBadRequest)
 		return
 	}
 
@@ -97,7 +97,7 @@ func (siw *ServerInterfaceWrapper) GetExperienceById(c *gin.Context) {
 
 	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		siw.ErrorHandler(c, fmt.Errorf("invalid format for parameter id: %w", err), http.StatusBadRequest)
 		return
 	}
 

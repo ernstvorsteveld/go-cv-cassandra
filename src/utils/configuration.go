@@ -82,6 +82,5 @@ func (c *Configuration) readEnvironment() {
 }
 
 func (c *Configuration) Print() {
-	log.Info("Configuration:\n")
-	log.Infof("%+v\n", *c)
+	log.Infof("Configuration:%+v", *c)
 }

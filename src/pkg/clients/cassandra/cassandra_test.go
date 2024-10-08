@@ -20,7 +20,7 @@ var ctx context.Context
 var session *CassandraSession
 
 func TestMain(m *testing.M) {
-	log.Infof("Creating Cassandra Session")
+	log.Infof("Creating Cassandra Session in TestMain")
 	ctx = context.Background()
 
 	var err error
@@ -57,9 +57,12 @@ func TestMain(m *testing.M) {
 }
 
 func Test_should_create_one_experience(t *testing.T) {
+	name := "value1"
+	tags := []string{"ab", "ac"}
+
 	d, err := session.Create(ExperienceDto{
-		name: "example1",
-		tags: []string{"a", "b"},
+		name: name,
+		tags: tags,
 	})
 	if err != nil {
 		log.Printf("failed to start container: %s", err)
@@ -71,24 +74,26 @@ func Test_should_create_one_experience(t *testing.T) {
 	errors := true
 	for itr.MapScan(m) {
 		assert.Equal(t, m["id"].(string), d.id)
-		assert.Equal(t, m["name"].(string), d.name)
-		assert.Equal(t, m["tags"].([]string), d.tags)
+		assert.Equal(t, m["name"].(string), name)
+		assert.Equal(t, m["tags"].([]string), tags)
 		errors = false
 	}
 	assert.False(t, errors)
 }
 
 func Test_should_get_one_experience(t *testing.T) {
-
 	q := `INSERT INTO testcv.experiences(id, name, tags) VALUES (?, ?, ?)`
+
 	id := uuid.New().String()
-	session.session.Query(q, id, "value1", []string{"ab", "ac"}).Exec()
+	name := "value1"
+	tags := []string{"ab", "ac"}
+	session.session.Query(q, id, name, tags).Exec()
 
 	d, err := session.Get(id)
 	assert.Nil(t, err)
 	assert.Equal(t, id, d.id)
-	assert.Equal(t, "value1", d.name)
-	assert.Equal(t, []string{"ab", "ac"}, d.tags)
+	assert.Equal(t, name, d.name)
+	assert.Equal(t, tags, d.tags)
 
 	log.Infof("Experience: %v", d)
 }

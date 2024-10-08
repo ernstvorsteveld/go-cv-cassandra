@@ -45,30 +45,31 @@ type ExperienceDto struct {
 }
 
 type ExperienceDao interface {
-	Create(dto ExperienceDto) (*ExperienceDto, error)
-	Get(id string) (ExperienceDto, error)
+	Create(dto *ExperienceDto) (*ExperienceDto, error)
+	Get(id string) (*ExperienceDto, error)
 	GetPage(page int32, size int16) ([]ExperienceDto, error)
-	Update(id string, dto ExperienceDto) error
-	Delete(id string) (ExperienceDto, error)
+	Update(id string, dto *ExperienceDto) error
+	Delete(id string) (*ExperienceDto, error)
 }
 
 const stmt_insert string = "INSERT INTO experiences(id,name,tags) VALUES(?,?,?)"
+const stmt_select_by_id = "SELECT id, name, tags FROM experiences WHERE id = ?"
 
-func (cc *CassandraSession) Create(dto ExperienceDto) (*ExperienceDto, error) {
+var QryErrorNotFound = errors.Errorf("Not Found")
+
+func (cc *CassandraSession) Create(dto *ExperienceDto) (*ExperienceDto, error) {
+	log.Debugf("About to Create Experience %v", dto)
 	uuid := uuid.New()
 	dto.id = uuid.String()
 	if err := cc.session.Query(stmt_insert, dto.id, dto.name, dto.tags).Exec(); err != nil {
 		return nil, err
 	}
 
-	return &dto, nil
+	return dto, nil
 }
 
-const stmt_select_by_id = "SELECT id, name, tags FROM experiences WHERE id = ?"
-
-var QryErrorNotFound = errors.Errorf("Not Found")
-
 func (cc *CassandraSession) Get(id string) (*ExperienceDto, error) {
+	log.Debugf("About to Get Experience by id %s", id)
 	var _id string
 	var name string
 	var tags []string
@@ -77,4 +78,14 @@ func (cc *CassandraSession) Get(id string) (*ExperienceDto, error) {
 	}
 	e := &ExperienceDto{id: _id, name: name, tags: tags}
 	return e, nil
+}
+
+const stmt_update string = "UPDATE experiences SET name = ?, tags = ? WHERE id = ?"
+
+func (cc *CassandraSession) Update(id string, dto *ExperienceDto) error {
+	log.Debugf("About to Update Experience with id %s with value %v", id, dto)
+	if err := cc.session.Query(stmt_update, dto.name, dto.tags, id).Exec(); err != nil {
+		return err
+	}
+	return nil
 }

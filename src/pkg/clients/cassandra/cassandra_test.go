@@ -60,7 +60,7 @@ func Test_should_create_one_experience(t *testing.T) {
 	name := "value1"
 	tags := []string{"ab", "ac"}
 
-	d, err := session.Create(ExperienceDto{
+	d, err := session.Create(&ExperienceDto{
 		name: name,
 		tags: tags,
 	})
@@ -81,13 +81,18 @@ func Test_should_create_one_experience(t *testing.T) {
 	assert.False(t, errors)
 }
 
-func Test_should_get_one_experience(t *testing.T) {
+func insertOne() (string, string, []string) {
 	q := `INSERT INTO testcv.experiences(id, name, tags) VALUES (?, ?, ?)`
 
 	id := uuid.New().String()
 	name := "value1"
 	tags := []string{"ab", "ac"}
 	session.session.Query(q, id, name, tags).Exec()
+	return id, name, tags
+}
+
+func Test_should_get_one_experience(t *testing.T) {
+	id, name, tags := insertOne()
 
 	d, err := session.Get(id)
 	assert.Nil(t, err)
@@ -96,4 +101,28 @@ func Test_should_get_one_experience(t *testing.T) {
 	assert.Equal(t, tags, d.tags)
 
 	log.Infof("Experience: %v", d)
+}
+
+func Test_should_update_one_experience(t *testing.T) {
+	id, _, _ := insertOne()
+
+	name := "updated-value"
+	tags := []string{"aaa", "bbb", "ccc", "ddd"}
+
+	err := session.Update(id, &ExperienceDto{id: id, name: name, tags: tags})
+	if err != nil {
+		log.Errorf("error while updating %v", err)
+	}
+
+	const q = "SELECT id, name, tags from testcv.experiences WHERE id = ?"
+	m := map[string]interface{}{}
+	itr := session.session.Query(q, id).Iter()
+	errors := true
+	for itr.MapScan(m) {
+		assert.Equal(t, m["id"].(string), id)
+		assert.Equal(t, m["name"].(string), name)
+		assert.Equal(t, m["tags"].([]string), tags)
+		errors = false
+	}
+	assert.False(t, errors)
 }

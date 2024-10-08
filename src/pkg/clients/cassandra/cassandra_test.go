@@ -14,9 +14,13 @@ import (
 	log "github.com/labstack/gommon/log"
 )
 
-func setupSuite() (*CassandraSession, *cassandra.CassandraContainer, context.Context) {
+var cassandraContainer *cassandra.CassandraContainer
+var ctx context.Context
+var session *CassandraSession
+
+func TestMain(m *testing.M) {
 	log.Infof("Creating Cassandra Session")
-	ctx := context.Background()
+	ctx = context.Background()
 
 	cr := testcontainers.ContainerRequest{
 		Name: "cassandratest",
@@ -25,7 +29,8 @@ func setupSuite() (*CassandraSession, *cassandra.CassandraContainer, context.Con
 		ContainerRequest: cr,
 	}
 
-	cassandraContainer, err := cassandra.Run(ctx,
+	var err error
+	cassandraContainer, err = cassandra.Run(ctx,
 		"cassandra:4.1.3",
 		testcontainers.CustomizeRequest(req),
 		cassandra.WithInitScripts(filepath.Join("testdata", "init.cql")),
@@ -33,12 +38,11 @@ func setupSuite() (*CassandraSession, *cassandra.CassandraContainer, context.Con
 
 	if err != nil {
 		log.Printf("failed to start container: %s", err)
-		return nil, nil, nil
 	}
 
 	rawPort, _ := cassandraContainer.MappedPort(ctx, "9042")
 	parts := strings.Split(rawPort.Port(), "/")
-	session := ConnectDatabase(&utils.CassandraConfiguration{
+	session = ConnectDatabase(&utils.CassandraConfiguration{
 		Keyspace: "testcv",
 		Url:      "127.0.0.1",
 		Port:     parts[0],
@@ -48,16 +52,13 @@ func setupSuite() (*CassandraSession, *cassandra.CassandraContainer, context.Con
 	})
 
 	log.Infof("Details: %v", session.details)
-	return session, cassandraContainer, ctx
-}
 
-func tearDownSuite(cc *cassandra.CassandraContainer, ctx context.Context) {
-	cc.Terminate(ctx)
+	m.Run()
+
+	cassandraContainer.Terminate(ctx)
 }
 
 func Test_should_create_one_experience(t *testing.T) {
-	session, cassandraContainer, ctx := setupSuite()
-
 	d, err := session.Create(ExperienceDto{
 		name: "example1",
 		tags: []string{"a", "b"},
@@ -84,6 +85,4 @@ func Test_should_create_one_experience(t *testing.T) {
 	assert.Equal(t, d.tags, d2.tags)
 
 	log.Infof("Experience: %v", d2)
-
-	tearDownSuite(cassandraContainer, ctx)
 }

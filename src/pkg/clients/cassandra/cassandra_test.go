@@ -14,7 +14,8 @@ import (
 	log "github.com/labstack/gommon/log"
 )
 
-func Test_should_create_experience(t *testing.T) {
+func setupSuite() (*CassandraSession, *cassandra.CassandraContainer, context.Context) {
+	log.Infof("Creating Cassandra Session")
 	ctx := context.Background()
 
 	cr := testcontainers.ContainerRequest{
@@ -32,7 +33,7 @@ func Test_should_create_experience(t *testing.T) {
 
 	if err != nil {
 		log.Printf("failed to start container: %s", err)
-		return
+		return nil, nil, nil
 	}
 
 	rawPort, _ := cassandraContainer.MappedPort(ctx, "9042")
@@ -47,6 +48,15 @@ func Test_should_create_experience(t *testing.T) {
 	})
 
 	log.Infof("Details: %v", session.details)
+	return session, cassandraContainer, ctx
+}
+
+func tearDownSuite(cc *cassandra.CassandraContainer, ctx context.Context) {
+	cc.Terminate(ctx)
+}
+
+func Test_should_create_one_experience(t *testing.T) {
+	session, cassandraContainer, ctx := setupSuite()
 
 	d, err := session.Create(ExperienceDto{
 		name: "example1",
@@ -62,6 +72,8 @@ func Test_should_create_experience(t *testing.T) {
 	errors := true
 	for itr.MapScan(m) {
 		assert.Equal(t, m["id"].(string), d.id)
+		assert.Equal(t, m["name"].(string), d.name)
+		assert.Equal(t, m["tags"].([]string), d.tags)
 		errors = false
 	}
 	assert.False(t, errors)
@@ -73,5 +85,5 @@ func Test_should_create_experience(t *testing.T) {
 
 	log.Infof("Experience: %v", d2)
 
-	cassandraContainer.Terminate(ctx)
+	tearDownSuite(cassandraContainer, ctx)
 }

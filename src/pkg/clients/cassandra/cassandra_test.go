@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/cassandra"
@@ -78,11 +79,19 @@ func Test_should_create_one_experience(t *testing.T) {
 		errors = false
 	}
 	assert.False(t, errors)
+}
 
-	d2, err := session.Get(d.id)
+func Test_should_get_one_experience(t *testing.T) {
+
+	q := `INSERT INTO testcv.experiences(id, name, tags) VALUES (?, ?, ?)`
+	id := uuid.New().String()
+	session.session.Query(q, id, "value1", []string{"ab", "ac"}).Exec()
+
+	d, err := session.Get(id)
 	assert.Nil(t, err)
-	assert.Equal(t, d.name, d2.name)
-	assert.Equal(t, d.tags, d2.tags)
+	assert.Equal(t, id, d.id)
+	assert.Equal(t, "value1", d.name)
+	assert.Equal(t, []string{"ab", "ac"}, d.tags)
 
-	log.Infof("Experience: %v", d2)
+	log.Infof("Experience: %v", d)
 }

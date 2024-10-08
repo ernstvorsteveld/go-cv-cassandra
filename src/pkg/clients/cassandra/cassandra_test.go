@@ -2,7 +2,6 @@ package cassandra
 
 import (
 	"context"
-	"log"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -11,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/cassandra"
+
+	log "github.com/labstack/gommon/log"
 )
 
 func Test_should_create_experience(t *testing.T) {
@@ -45,8 +46,7 @@ func Test_should_create_experience(t *testing.T) {
 		Secret:   utils.SensitiveInfo("cassandra"),
 	})
 
-	log.Println(session.details)
-	log.Println(session.details)
+	log.Infof("Details: %v", session.details)
 
 	d, err := session.Create(ExperienceDto{
 		name: "example1",
@@ -65,6 +65,13 @@ func Test_should_create_experience(t *testing.T) {
 		errors = false
 	}
 	assert.False(t, errors)
+
+	d2, err := session.Get(d.id)
+	assert.Nil(t, err)
+	assert.Equal(t, d.name, d2.name)
+	assert.Equal(t, d.tags, d2.tags)
+
+	log.Infof("Experience: %v", d2)
 
 	cassandraContainer.Terminate(ctx)
 }

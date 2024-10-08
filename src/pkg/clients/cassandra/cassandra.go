@@ -6,7 +6,8 @@ import (
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/gocql/gocql"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
+	log "github.com/labstack/gommon/log"
+	"github.com/pkg/errors"
 )
 
 type CassandraSession struct {
@@ -30,7 +31,7 @@ func ConnectDatabase(c *utils.CassandraConfiguration) *CassandraSession {
 
 	session, err := cluster.CreateSession()
 	if err != nil {
-		logrus.Fatal(err)
+		log.Errorf("error: %c", err)
 	}
 
 	cs := &CassandraSession{c, session}
@@ -61,4 +62,19 @@ func (cc *CassandraSession) Create(dto ExperienceDto) (*ExperienceDto, error) {
 	}
 
 	return &dto, nil
+}
+
+const stmt_select_by_id = "SELECT id, name, tags FROM experiences WHERE id = ?"
+
+var QryErrorNotFound = errors.Errorf("Not Found")
+
+func (cc *CassandraSession) Get(id string) (*ExperienceDto, error) {
+	var _id string
+	var name string
+	var tags []string
+	if err := cc.session.Query(stmt_select_by_id, id).Consistency(gocql.One).Scan(&_id, &name, &tags); err != nil {
+		return nil, err
+	}
+	e := &ExperienceDto{id: _id, name: name, tags: tags}
+	return e, nil
 }

@@ -23,17 +23,14 @@ func TestMain(m *testing.M) {
 	log.Infof("Creating Cassandra Session")
 	ctx = context.Background()
 
-	cr := testcontainers.ContainerRequest{
-		Name: "cassandratest",
-	}
-	req := testcontainers.GenericContainerRequest{
-		ContainerRequest: cr,
-	}
-
 	var err error
 	cassandraContainer, err = cassandra.Run(ctx,
 		"cassandra:4.1.3",
-		testcontainers.CustomizeRequest(req),
+		testcontainers.CustomizeRequest(testcontainers.GenericContainerRequest{
+			ContainerRequest: testcontainers.ContainerRequest{
+				Name: "cassandratest",
+			},
+		}),
 		cassandra.WithInitScripts(filepath.Join("testdata", "init.cql")),
 	)
 

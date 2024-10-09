@@ -7,20 +7,37 @@ import (
 )
 
 type Experience struct {
-	Name     string `validate:"required,min=5,max=100"`
-	Tags     []string
-	Retries  int8
-	username string
-	secret   string
+	Id   string
+	Name string `validate:"required,alphanum,min=5,max=100"`
+	Tags []string
 }
 
-func NewExperience(name string, tags []string, retries int8, username string, secret string) (Experience, error) {
-	e := Experience{name, tags, retries, username, secret}
-	validate := validator.New()
+func NewExperience(id string, name string, tags []string) (*Experience, error) {
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
+	e := &Experience{Id: id, Name: name, Tags: tags}
 	err := validate.Struct(e)
 	if err != nil {
 		fmt.Println(err.Error())
-		return Experience{"error", []string{}, 0, "error", "error"}, err
+		return &Experience{"error", "error", []string{}}, err
 	}
 	return e, err
+}
+
+type IExperience interface {
+	GetId() string
+	GetName() string
+	GetTags() []string
+}
+
+func (e *Experience) GetId() string {
+	return e.Id
+}
+
+func (e *Experience) GetName() string {
+	return e.Name
+}
+
+func (e *Experience) GetTags() []string {
+	return e.Tags
 }

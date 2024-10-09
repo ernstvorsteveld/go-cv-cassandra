@@ -12,7 +12,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/cassandra"
 
-	log "github.com/labstack/gommon/log"
+	log "github.com/sirupsen/logrus"
 )
 
 var cassandraContainer *cassandra.CassandraContainer

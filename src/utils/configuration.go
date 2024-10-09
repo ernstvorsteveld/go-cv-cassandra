@@ -1,14 +1,17 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 
-	log "github.com/labstack/gommon/log"
+	"github.com/go-playground/validator/v10"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 type Configuration struct {
-	DB DBConfiguration
+	DB  DBConfiguration
+	Api APIConfiguration
 }
 
 type DBConfiguration struct {
@@ -22,6 +25,10 @@ type CassandraConfiguration struct {
 	Retries  int8
 	Username string
 	Secret   SensitiveInfo
+}
+
+type APIConfiguration struct {
+	Port string
 }
 
 type SensitiveInfo string
@@ -42,6 +49,13 @@ type ConfigurationManager interface {
 func (c *Configuration) Read(fname string, ftype string) {
 	c.readFile(fname, ftype)
 	c.readEnvironment()
+
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	err := validate.Struct(c)
+	if err != nil {
+		fmt.Printf("error while reading configuration %v", err)
+		panic(err)
+	}
 }
 
 const CASSANDRA_URL = "CASSANDRA_URL"

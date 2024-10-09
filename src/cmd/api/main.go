@@ -26,7 +26,7 @@ func main() {
 	c.Read("config", "yml")
 	c.Print()
 
-	s := api.NewGinCvServer(api.NewCvApiService(), c.Api.Port)
+	s := api.NewGinCvServer(api.NewCvApiService(&c), c.Api.Port)
 
 	// petStore := api.NewPetStore()
 	// s := NewGinPetServer(petStore, *port)

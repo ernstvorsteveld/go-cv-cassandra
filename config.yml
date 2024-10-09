@@ -1,9 +1,0 @@
-api:
-  port: 8091
-db:
-  cassandra:
-    url: "127.0.0.1"
-    keyspace: "default"
-    retries: 3
-    username: cassandra
-    secret: cassandra

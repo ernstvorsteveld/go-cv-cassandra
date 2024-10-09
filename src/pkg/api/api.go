@@ -5,12 +5,14 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/pkg/domain"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
@@ -21,9 +23,9 @@ type CvApiService struct {
 	cvService *domain.CvServices
 }
 
-func NewCvApiService() *CvApiService {
+func NewCvApiService(c *utils.Configuration) *CvApiService {
 	return &CvApiService{
-		cvService: domain.NewCvService(),
+		cvService: domain.NewCvService(c),
 	}
 }
 
@@ -36,12 +38,33 @@ func (cs *CvApiService) ListExperiences(c *gin.Context, params ListExperiencesPa
 // (POST /experiences)
 func (cs *CvApiService) CreateExperience(c *gin.Context) {
 	log.Debugf("About to Create an Experience")
+	var e domain.Experience
+	if err := c.ShouldBindJSON(&e); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	cs.cvService.CreateExperience(e)
 }
 
 // Info for a specific experience
 // (GET /experiences/{id})
 func (cs *CvApiService) GetExperienceById(c *gin.Context, id string) {
 	log.Debugf("About to Get an Experience by Id")
+	e, err := cs.cvService.GetExperienceById(id)
+	if err != nil {
+		c.Request.Response.StatusCode = 400
+	} else {
+		body, err := json.Marshal(e)
+		if err != nil {
+			c.JSON(400, nil)
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"code":    http.StatusOK,
+			"message": string(body),
+		})
+	}
 }
 
 func NewGinCvServer(cvApiService *CvApiService, port string) *http.Server {

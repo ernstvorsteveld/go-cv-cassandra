@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/pkg/clients/cassandra"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -11,8 +12,10 @@ type CvServices struct {
 	cs *cassandra.CassandraSession
 }
 
-func NewCvService() *CvServices {
-	return &CvServices{}
+func NewCvService(c *utils.Configuration) *CvServices {
+	return &CvServices{
+		cs: cassandra.ConnectDatabase(c),
+	}
 }
 
 type ExperienceServices interface {
@@ -33,4 +36,14 @@ func (c *CvServices) CreateExperience(e Experience) (*Experience, error) {
 		log.Fatalf("%v", err)
 	}
 	return NewExperience(dto.GetId(), dto.GetName(), dto.GetTags())
+}
+
+func (c *CvServices) GetExperienceById(id string) (*Experience, error) {
+	dto, err := c.cs.Get(id)
+	if err != nil {
+		return nil, err
+	}
+
+	e, _ := NewExperience(dto.GetId(), dto.GetName(), dto.GetTags())
+	return e, nil
 }

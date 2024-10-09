@@ -7,9 +7,9 @@ import (
 )
 
 type Experience struct {
-	Id   string
-	Name string `validate:"required,min=5,max=100"`
-	Tags []string
+	Id   string   `form:"id" json:"id" xml:"id"`
+	Name string   `form:"name" json:"name" xml:"name" validate:"required,min=5,max=100"`
+	Tags []string `form:"tags" json:"tags" xml:"tags"`
 }
 
 func NewExperience(id string, name string, tags []string) (*Experience, error) {

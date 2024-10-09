@@ -1,0 +1,40 @@
+services:
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+      - "7001:7001"
+      - "7199:7199"
+      - "9160:9160"      
+    environment:
+      CASSANDRA_SEEDS: 10.6.0.11
+      CASSANDRA_USER: cassandra
+      CASSANDRA_PASSWORD: cassandra
+      CASSANDRA_PASSWORD_SEEDER: "yes"
+    volumes:
+      - ./out/cassandra_data:/var/lib/cassandra
+    networks:
+      default:
+        ipv4_address: 10.6.0.11
+  
+  cassandra-web:
+    image: ipushc/cassandra-web:latest
+    container_name: cassandra-web
+    depends_on:
+      - cassandra
+    ports:
+      - "3000:3000"
+      - "8183:8083"
+    environment:
+      CASSANDRA_HOST_IP: 10.6.0.11
+      CASSANDRA_PORT: 9042
+      USERNAME: cassandra
+      PASSWORD: cassandra
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.6.0.0/24

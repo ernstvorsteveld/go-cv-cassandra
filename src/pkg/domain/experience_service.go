@@ -11,8 +11,8 @@ type CvServices struct {
 	cs *cassandra.CassandraSession
 }
 
-func NewCvService() (*CvServices, error) {
-	return &CvServices{}, nil
+func NewCvService() *CvServices {
+	return &CvServices{}
 }
 
 type ExperienceServices interface {

@@ -8,7 +8,7 @@ import (
 
 type Experience struct {
 	Id   string
-	Name string `validate:"required,alphanum,min=5,max=100"`
+	Name string `validate:"required,min=5,max=100"`
 	Tags []string
 }
 

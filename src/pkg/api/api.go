@@ -23,7 +23,7 @@ type CvApiService struct {
 
 func NewCvApiService() *CvApiService {
 	return &CvApiService{
-		cvService: &domain.CvServices{},
+		cvService: domain.NewCvService(),
 	}
 }
 

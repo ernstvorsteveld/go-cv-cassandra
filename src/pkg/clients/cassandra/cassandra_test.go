@@ -40,16 +40,18 @@ func TestMain(m *testing.M) {
 
 	rawPort, _ := cassandraContainer.MappedPort(ctx, "9042")
 	parts := strings.Split(rawPort.Port(), "/")
-	session = ConnectDatabase(&utils.CassandraConfiguration{
-		Keyspace: "testcv",
-		Url:      "127.0.0.1",
-		Port:     parts[0],
-		Retries:  int8(3),
-		Username: "cassandra",
-		Secret:   utils.SensitiveInfo("cassandra"),
-	})
+	session = ConnectDatabase(&utils.Configuration{
+		DB: utils.DBConfiguration{
+			Cassandra: utils.CassandraConfiguration{
+				Keyspace: "testcv",
+				Url:      "127.0.0.1",
+				Port:     parts[0],
+				Retries:  int8(3),
+				Username: "cassandra",
+				Secret:   utils.SensitiveInfo("cassandra"),
+			}}})
 
-	log.Infof("Details: %v", session.details)
+	log.Infof("Details: %v", session)
 
 	m.Run()
 
@@ -70,7 +72,7 @@ func Test_should_create_one_experience(t *testing.T) {
 
 	m := map[string]interface{}{}
 	q := `SELECT * from testcv.experiences;`
-	itr := session.session.Query(q).Iter()
+	itr := session.cs.Query(q).Iter()
 	errors := true
 	for itr.MapScan(m) {
 		assert.Equal(t, m["id"].(string), d.id)
@@ -78,6 +80,7 @@ func Test_should_create_one_experience(t *testing.T) {
 		assert.Equal(t, m["tags"].([]string), tags)
 		errors = false
 	}
+
 	assert.False(t, errors)
 }
 
@@ -87,7 +90,7 @@ func insertOne() (string, string, []string) {
 	id := uuid.New().String()
 	name := "value1"
 	tags := []string{"ab", "ac"}
-	session.session.Query(q, id, name, tags).Exec()
+	session.cs.Query(q, id, name, tags).Exec()
 	return id, name, tags
 }
 
@@ -116,7 +119,7 @@ func Test_should_update_one_experience(t *testing.T) {
 
 	const q = "SELECT id, name, tags from testcv.experiences WHERE id = ?"
 	m := map[string]interface{}{}
-	itr := session.session.Query(q, id).Iter()
+	itr := session.cs.Query(q, id).Iter()
 	errors := true
 	for itr.MapScan(m) {
 		assert.Equal(t, m["id"].(string), id)

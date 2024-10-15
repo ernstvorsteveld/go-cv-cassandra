@@ -10,3 +10,7 @@ cqlsh
 use cv;
 select * from cv_experiences;
 ----
+
+== Directory structure
+
+https://github.com/golang-standards/project-layout

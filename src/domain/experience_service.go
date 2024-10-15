@@ -3,7 +3,7 @@ package domain
 import (
 	"errors"
 
-	"github.com/ernstvorsteveld/go-cv-cassandra/src/pkg/clients/cassandra"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/clients/cassandra"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	log "github.com/sirupsen/logrus"
 )

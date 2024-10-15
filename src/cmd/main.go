@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/ernstvorsteveld/go-cv-cassandra/src/pkg/api"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/api"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 
 	log "github.com/sirupsen/logrus"

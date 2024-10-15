@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ernstvorsteveld/go-cv-cassandra/src/pkg/domain"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/domain"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"

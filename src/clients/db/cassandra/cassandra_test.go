@@ -16,12 +16,11 @@ import (
 )
 
 var cassandraContainer *cassandra.CassandraContainer
-var ctx context.Context
 var session *CassandraSession
 
 func TestMain(m *testing.M) {
 	log.Infof("Creating Cassandra Session in TestMain")
-	ctx = context.Background()
+	ctx := context.Background()
 
 	var err error
 	cassandraContainer, err = cassandra.Run(ctx,

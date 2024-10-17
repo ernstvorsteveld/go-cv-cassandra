@@ -21,3 +21,10 @@ https://github.com/golang-standards/project-layout
 ----
 go generate ./src/api/cv_api.go
 ----
+
+== UML model
+
+[plantuml,png]
+----
+plantuml::overview.pu[png]
+----

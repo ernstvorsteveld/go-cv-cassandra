@@ -21,11 +21,11 @@ func NewCvService(c *utils.Configuration) *CvServices {
 	}
 }
 
-type ExperienceDbAdapter interface {
-	Create(dto *db.ExperienceDto) (*db.ExperienceDto, error)
-	Get(id string) (*db.ExperienceDto, error)
-	List(page int, size int) (*[]model.Experience, error)
-}
+// type ExperienceDbAdapter interface {
+// 	Create(dto *db.ExperienceDto) (*db.ExperienceDto, error)
+// 	Get(id string) (*db.ExperienceDto, error)
+// 	List(page int, size int) (*[]model.Experience, error)
+// }
 
 type ExperienceServices interface {
 	ListExperiences(ctx context.Context, page int, size int) (*[]model.Experience, error)

@@ -1,26 +1,37 @@
 @startuml "overview"
 
-package cmd.api {
+package cmd {
     class main
 }
 
 package api {
-    class api implements cv_server_gen
+    class cv_api_impl implements cv_server_gen
 
-    cmd.api.main -> api
+    cmd.main -> cv_api_impl
 }
 
 package domain {
-    class experience
-    class experience_service
 
-    api.api -> experience_service
+    package model {
+        class experience
+    }
+
+    package services {
+        class experience_service
+    }
+
+    api.cv_api_impl -> services.experience_service
 }
 
-package clients.cassandra {
-    class cassandra
+package clients.db {
 
-    domain.experience_service -down-> cassandra
+    class ExperienceDbAdapter
+
+    package cassandra {
+        class cassandra
+    }
+
+    domain.services.experience_service -down-> ExperienceDbAdapter
 }
 
 

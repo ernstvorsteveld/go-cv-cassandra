@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -27,7 +28,7 @@ func NewCvApiService(c *utils.Configuration) *CvApiService {
 
 func (cs *CvApiService) ListExperiences(c *gin.Context, params ListExperiencesParams) {
 	log.Debugf("About to List Experiences")
-	cs.cvService.ListExperiences(int(*params.Page), int(*params.Limit))
+	cs.cvService.ListExperiences(context.Background(), int(*params.Page), int(*params.Limit))
 }
 
 // Create an experience
@@ -39,14 +40,14 @@ func (cs *CvApiService) CreateExperience(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	cs.cvService.CreateExperience(e)
+	cs.cvService.CreateExperience(context.Background(), e)
 }
 
 // Info for a specific experience
 // (GET /experiences/{id})
 func (cs *CvApiService) GetExperienceById(c *gin.Context, id string) {
 	log.Debugf("About to Get an Experience by Id")
-	e, err := cs.cvService.GetExperienceById(id)
+	e, err := cs.cvService.GetExperienceById(context.Background(), id)
 	if err != nil {
 		c.Request.Response.StatusCode = 400
 	} else {

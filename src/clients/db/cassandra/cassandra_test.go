@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/clients/db"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -62,10 +63,7 @@ func Test_should_create_one_experience(t *testing.T) {
 	name := "value1"
 	tags := []string{"ab", "ac"}
 
-	d, err := session.Create(&ExperienceDto{
-		name: name,
-		tags: tags,
-	})
+	d, err := session.Create(context.Background(), db.NewExperienceDto("", name, tags))
 	if err != nil {
 		log.Printf("failed to start container: %s", err)
 	}
@@ -75,7 +73,7 @@ func Test_should_create_one_experience(t *testing.T) {
 	itr := session.cs.Query(q).Iter()
 	errors := true
 	for itr.MapScan(m) {
-		assert.Equal(t, m["id"].(string), d.id)
+		assert.Equal(t, m["id"].(string), d.GetId())
 		assert.Equal(t, m["name"].(string), name)
 		assert.Equal(t, m["tags"].([]string), tags)
 		errors = false
@@ -97,11 +95,11 @@ func insertOne() (string, string, []string) {
 func Test_should_get_one_experience(t *testing.T) {
 	id, name, tags := insertOne()
 
-	d, err := session.Get(id)
+	d, err := session.Get(context.Background(), id)
 	assert.Nil(t, err)
-	assert.Equal(t, id, d.id)
-	assert.Equal(t, name, d.name)
-	assert.Equal(t, tags, d.tags)
+	assert.Equal(t, id, d.GetId())
+	assert.Equal(t, name, d.GetName())
+	assert.Equal(t, tags, d.GetTags())
 
 	log.Infof("Experience: %v", d)
 }
@@ -112,7 +110,7 @@ func Test_should_update_one_experience(t *testing.T) {
 	name := "updated-value"
 	tags := []string{"aaa", "bbb", "ccc", "ddd"}
 
-	err := session.Update(id, &ExperienceDto{id: id, name: name, tags: tags})
+	err := session.Update(context.Background(), id, db.NewExperienceDto(id, name, tags))
 	if err != nil {
 		log.Errorf("error while updating %v", err)
 	}

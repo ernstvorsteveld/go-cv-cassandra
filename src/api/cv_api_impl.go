@@ -8,7 +8,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ernstvorsteveld/go-cv-cassandra/src/domain"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/domain/model"
+	services "github.com/ernstvorsteveld/go-cv-cassandra/src/domain/serivces"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -17,12 +18,12 @@ import (
 )
 
 type CvApiService struct {
-	cvService *domain.CvServices
+	cvService *services.CvServices
 }
 
 func NewCvApiService(c *utils.Configuration) *CvApiService {
 	return &CvApiService{
-		cvService: domain.NewCvService(c),
+		cvService: services.NewCvService(c),
 	}
 }
 
@@ -35,7 +36,7 @@ func (cs *CvApiService) ListExperiences(c *gin.Context, params ListExperiencesPa
 // (POST /experiences)
 func (cs *CvApiService) CreateExperience(c *gin.Context) {
 	log.Debugf("About to Create an Experience")
-	var e domain.Experience
+	var e model.Experience
 	if err := c.ShouldBindJSON(&e); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

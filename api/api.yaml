@@ -2,13 +2,17 @@ openapi: "3.0.0"
 info:
   version: "1.0.0"
   title: Curriculum Vitae API
+  description: API for Curriculum Vitae
   license:
     name: MIT
+tags:
+  - name: Experiences
 servers:
   - url: "http://api.cvapp.com/v1"
 paths:
   /experiences:
     get:
+      description: Returns all experiences
       summary: List all experiences
       operationId: listExperiences
       tags:
@@ -23,6 +27,7 @@ paths:
             default: 25
             maximum: 100
             format: int32
+            example: 25
         - name: page
           in: query
           description: The page to return
@@ -32,47 +37,98 @@ paths:
             maximum: 999999
             default: 1
             format: int32
+            example: 100
       responses:
         "200":
           description: A paged array of pets
           headers:
-            x-next:
+            X-NEXT:
+              example: "http://api.cvapp.com/v1/experiences?page=2&size=25"
               description: A link to the next page of responses
               schema:
                 type: string
+            X-PREVIOUS:
+              example: "http://api.cvapp.com/v1/experiences?page=1&size=25"
+              description: A link to the previous page of responses
+              schema:
+                type: string
+            X-CORRELATION-ID:
+              example: "http://api.cvapp.com/v1/experiences/12345678-1234-1234-1234-1234567890ab"
+              description: Id of the get experiences request
+              schema:
+                type: string
           content:
-            application/json:    
+            application/json:
+              example: []
               schema:
                 $ref: "#/components/schemas/Experiences"
         default:
           description: unexpected error
           content:
             application/json:
+              example:
+                {
+                  "requestId": "12345678-1234-1234-1234-1234567890ab",
+                  "code": "EPE000001",
+                  "message": "An error occurred",
+                }
               schema:
                 $ref: "#/components/schemas/Error"
     post:
       summary: Create an experience
+      description: Create an experience with the given payload
       operationId: createExperience
       tags:
         - Experiences
       requestBody:
+        description: Experience to add
         content:
           application/json:
+            example: { "name": "Experience Name", "tags": ["tag1", "tag2"] }
             schema:
               $ref: "#/components/schemas/CreateExperienceRequest"
         required: true
       responses:
         "201":
-          description: Null response
+          description: Empty response
+          headers:
+            X-OBJECT-ID:
+              example: "12345678-1234-1234-1234-1234567890ab"
+              description: ObjectIO of the create experience
+              schema:
+                type: string
+            X-CORRELATION-ID:
+              example: "12345678-1234-1234-1234-1234567890ab"
+              description: Id of the correlation
+              schema:
+                type: string
+            Content-Location:
+              example: "http://api.cvapp.com/v1/experiences/12345678-1234-1234-1234-1234567890ab"
+              description: Link to the created experience
+              schema:
+                type: string
         default:
-          description: unexpected error
+          description: When create fails
+          headers:
+            X-CORRELATION-ID:
+              example: 12345678-1234-1234-1234-1234567890ab
+              description: Id of the correlation of the create experience request
+              schema:
+                type: string
           content:
             application/json:
+              example:
+                {
+                  "requestId": "12345678-1234-1234-1234-1234567890ab",
+                  "code": "EPE000002",
+                  "message": "Create failed",
+                }
               schema:
                 $ref: "#/components/schemas/Error"
   /experiences/{id}:
     get:
       summary: Info for a specific experience
+      description: Returns the experience with the given id
       operationId: getExperienceById
       tags:
         - Experiences
@@ -82,79 +138,140 @@ paths:
           required: true
           description: The id of the experience to retrieve
           schema:
+            example: 12345678-1234-1234-1234-1234567890ab
             type: string
       responses:
         "200":
           description: Expected response to a valid request
+          headers:
+            X-CORRELATION-ID:
+              example: "12345678-1234-1234-1234-1234567890ab"
+              description: Id of the correlation of the get experience by id request
+              schema:
+                type: string
+                example: 12345678-1234-1234-1234-1234567890ab
           content:
             application/json:
+              example:
+                {
+                  "id": "12345678-1234-1234-1234-1234567890ab",
+                  "name": "Experience Name",
+                  "tags": ["tag1", "tag2"],
+                }
               schema:
                 $ref: "#/components/schemas/Experience"
         default:
-          description: unexpected error
+          description: Could not find experience
+          headers:
+            X-CORRELATION-ID:
+              example: "12345678-1234-1234-1234-1234567890ab"
+              description: Id of the correlation of the get experience by id request error
+              schema:
+                type: string
+                example: "12345678-1234-1234-1234-1234567890ab"
           content:
             application/json:
+              example:
+                {
+                  "requestId": "12345678-1234-1234-1234-1234567890ab",
+                  "code": "EPE000003",
+                  "message": "Could not find experience",
+                }
               schema:
                 $ref: "#/components/schemas/Error"
 components:
   schemas:
     ObjectId:
+      description: ObjectId
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
+          example: "12345678-1234-1234-1234-1234567890ab"
     Tag:
-      required: 
+      required:
         - tag
-      properties: 
+      description: A tag
+      example: tag1
+      properties:
         tag:
+          example: tag1
           type: string
           maxLength: 50
           format: ".{1,50}"
     TagArray:
       type: array
+      description: Array of tags
+      example: ["tag1", "tag2"]
       items:
         $ref: "#/components/schemas/Tag"
     TagArrayType:
       type: object
+      description: Payload for tags
+      example: { "tags": ["tag1", "tag2"] }
       properties:
         tags:
           type: array
+          example: ["tag1", "tag2"]
           items:
             $ref: "#/components/schemas/Tag"
     ExperiencePayload:
       type: object
+      description: Payload for creating an experience
+      example: { "name": "Experience Name", "tags": ["tag1", "tag2"] }
       required:
         - name
       properties:
         name:
           type: string
+          example: Experience Name
     Experiences:
       type: array
       maxItems: 100
+      description: Array of experiences
+      example:
+        [
+          {
+            "id": "12345678-1234-1234-1234-1234567890ab",
+            "name": "Experience Name",
+            "tags": ["tag1", "tag2"],
+          },
+        ]
       items:
         $ref: "#/components/schemas/Experience"
     Experience:
+      description: An existing experience
       allOf:
-      - $ref: '#/components/schemas/ObjectId'
-      - $ref: '#/components/schemas/ExperiencePayload'
-      - $ref: "#/components/schemas/TagArray"
+        - $ref: "#/components/schemas/ObjectId"
+        - $ref: "#/components/schemas/ExperiencePayload"
+        - $ref: "#/components/schemas/TagArray"
     CreateExperienceRequest:
+      description: Request to create an experience
       allOf:
-      - $ref: "#/components/schemas/TagArrayType"
-      - $ref: '#/components/schemas/ExperiencePayload'
+        - $ref: "#/components/schemas/TagArrayType"
+        - $ref: "#/components/schemas/ExperiencePayload"
     Error:
       type: object
+      description: Error response
       required:
         - requestId
         - code
         - message
+      example:
+        {
+          "requestId": "12345678-1234-1234-1234-1234567890ab",
+          "code": "EPE000001",
+          "message": "An error occurred",
+        }
       properties:
         requestId:
           type: string
           format: uuid
+          example: 12345678-1234-1234-1234-1234567890ab
         code:
           type: string
           pattern: "[A-Z]{3}[0-9]{6}"
+          example: EPE000001
         message:
           type: string
+          example: An error occurred

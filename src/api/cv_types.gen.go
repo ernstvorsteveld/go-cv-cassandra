@@ -13,7 +13,7 @@ type CreateExperienceRequest struct {
 	Tags *[]Tag `json:"tags,omitempty"`
 }
 
-// Error defines model for Error.
+// Error Error response
 type Error struct {
 	Code      string             `json:"code"`
 	Message   string             `json:"message"`
@@ -22,32 +22,32 @@ type Error struct {
 
 // Experience defines model for Experience.
 type Experience struct {
-	Id   *int64 `json:"id,omitempty"`
-	Name string `json:"name"`
+	Id   *openapi_types.UUID `json:"id,omitempty"`
+	Name string              `json:"name"`
 }
 
-// ExperiencePayload defines model for ExperiencePayload.
+// ExperiencePayload Payload for creating an experience
 type ExperiencePayload struct {
 	Name string `json:"name"`
 }
 
-// Experiences defines model for Experiences.
+// Experiences Array of experiences
 type Experiences = []Experience
 
-// ObjectId defines model for ObjectId.
+// ObjectId ObjectId
 type ObjectId struct {
-	Id *int64 `json:"id,omitempty"`
+	Id *openapi_types.UUID `json:"id,omitempty"`
 }
 
-// Tag defines model for Tag.
+// Tag A tag
 type Tag struct {
 	Tag string `json:"tag"`
 }
 
-// TagArray defines model for TagArray.
+// TagArray Array of tags
 type TagArray = []Tag
 
-// TagArrayType defines model for TagArrayType.
+// TagArrayType Payload for tags
 type TagArrayType struct {
 	Tags *[]Tag `json:"tags,omitempty"`
 }

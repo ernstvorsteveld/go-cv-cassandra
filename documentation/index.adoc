@@ -14,3 +14,10 @@ select * from cv_experiences;
 == Directory structure
 
 https://github.com/golang-standards/project-layout
+
+== Generate API
+
+[source,bash]
+----
+go generate ./src/api/cv_api.go
+----

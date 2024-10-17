@@ -1,18 +1,34 @@
 package services
 
 import (
+	"context"
 	"testing"
 
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/clients/db/mock"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/domain/model"
-	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_should_create_experience(t *testing.T) {
-	_, err := model.NewExperience("", "", []string{"a", "b"})
+	db := mock.NewMockDb()
+	service := NewCvService(db)
 
-	c := utils.Configuration{}
-	c.Read("test_config", "yml")
+	e, _ := model.NewExperience("", "test-name", []string{"a", "b"})
+	newExp, _ := service.CreateExperience(context.Background(), *e)
+	assert.Equal(t, newExp.Name, "test-name")
+	assert.NotEmpty(t, newExp.Id)
+	assert.Equal(t, len(db.Items), 1)
+	assert.Equal(t, newExp.Id, db.Items[newExp.Id].GetId())
+}
 
-	assert.NotEmpty(t, err, "Should have a name value")
+func Test_should_get_experience_by_id(t *testing.T) {
+	service := NewCvService(mock.NewMockDb())
+
+	e, _ := model.NewExperience("", "test-name", []string{"a", "b"})
+	newExp, _ := service.CreateExperience(context.Background(), *e)
+	assert.Equal(t, newExp.Name, "test-name")
+	assert.NotEmpty(t, newExp.Id)
+	exp, err := service.GetExperienceById(context.Background(), newExp.Id)
+	assert.Nil(t, err, "Experience not found by id")
+	assert.Equal(t, exp.Name, "test-name")
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/clients/db"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/gocql/gocql"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -53,8 +52,7 @@ var QryErrorNotFound = errors.Errorf("Not Found")
 
 func (cc *CassandraSession) Create(ctx context.Context, dto *db.ExperienceDto) (*db.ExperienceDto, error) {
 	log.Debugf("About to Create Experience %v", dto)
-	uuid := uuid.New()
-	dto = db.NewExperienceDto(uuid.String(), dto.GetName(), dto.GetTags())
+	dto = db.NewExperienceDto(dto.GetId(), dto.GetName(), dto.GetTags())
 	if err := cc.cs.Query(stmt_insert, dto.GetId(), dto.GetName(), dto.GetTags()).Exec(); err != nil {
 		return nil, err
 	}

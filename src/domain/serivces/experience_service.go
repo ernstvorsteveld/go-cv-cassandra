@@ -6,6 +6,7 @@ import (
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/clients/db"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/domain/model"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -34,7 +35,7 @@ func (c *CvServices) ListExperiences(ctx context.Context, page int, size int) (*
 }
 
 func (c *CvServices) CreateExperience(ctx context.Context, e model.Experience) (*model.Experience, error) {
-	dto := db.NewExperienceDto(e.GetId(), e.GetName(), e.GetTags())
+	dto := db.NewExperienceDto(uuid.NewString(), e.GetName(), e.GetTags())
 	dto, err := c.db.Create(context.Background(), dto)
 	if err != nil {
 		log.Fatalf("%v", err)

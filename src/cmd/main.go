@@ -4,6 +4,8 @@ import (
 	"os"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/api"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/clients/db/cassandra"
+	services "github.com/ernstvorsteveld/go-cv-cassandra/src/domain/serivces"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 
 	log "github.com/sirupsen/logrus"
@@ -22,14 +24,16 @@ func init() {
 }
 
 func main() {
-	c := utils.Configuration{}
+	c := &utils.Configuration{}
 	c.Read("config", "yml")
 	c.Print()
 
-	s := api.NewGinCvServer(api.NewCvApiService(&c), c.Api.Port)
+	con := cassandra.NewCassandraConnection(c)
+	h := services.NewCvService(con)
+	server := api.NewGinCvServer(api.NewCvApiService(h), c.Api.Port)
 
 	// petStore := api.NewPetStore()
 	// s := NewGinPetServer(petStore, *port)
 	// // And we serve HTTP until the world ends.
-	log.Fatal(s.ListenAndServe())
+	log.Fatal(server.ListenAndServe())
 }

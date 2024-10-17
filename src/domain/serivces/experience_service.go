@@ -5,9 +5,7 @@ import (
 	"errors"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/clients/db"
-	"github.com/ernstvorsteveld/go-cv-cassandra/src/clients/db/cassandra"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/domain/model"
-	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -15,9 +13,9 @@ type CvServices struct {
 	db db.ExperienceDbAdapter
 }
 
-func NewCvService(c *utils.Configuration) *CvServices {
+func NewCvService(db db.ExperienceDbAdapter) ExperienceServices {
 	return &CvServices{
-		db: cassandra.NewCassandraConnection(c),
+		db: db,
 	}
 }
 

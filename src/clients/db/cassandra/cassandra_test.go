@@ -9,11 +9,10 @@ import (
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/clients/db"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/cassandra"
-
-	log "github.com/sirupsen/logrus"
 )
 
 var cassandraContainer *cassandra.CassandraContainer

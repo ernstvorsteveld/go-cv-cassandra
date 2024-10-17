@@ -10,45 +10,47 @@ import (
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/domain/model"
 	services "github.com/ernstvorsteveld/go-cv-cassandra/src/domain/serivces"
-	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
 	middleware "github.com/oapi-codegen/gin-middleware"
 )
 
-type CvApiService struct {
-	cvService *services.CvServices
+type CvApiServices interface {
 }
 
-func NewCvApiService(c *utils.Configuration) *CvApiService {
-	return &CvApiService{
-		cvService: services.NewCvService(c),
+type CvApiHandler struct {
+	h services.ExperienceServices
+}
+
+func NewCvApiService(s services.ExperienceServices) *CvApiHandler {
+	return &CvApiHandler{
+		h: s,
 	}
 }
 
-func (cs *CvApiService) ListExperiences(c *gin.Context, params ListExperiencesParams) {
+func (cs *CvApiHandler) ListExperiences(c *gin.Context, params ListExperiencesParams) {
 	log.Debugf("About to List Experiences")
-	cs.cvService.ListExperiences(context.Background(), int(*params.Page), int(*params.Limit))
+	cs.h.ListExperiences(context.Background(), int(*params.Page), int(*params.Limit))
 }
 
 // Create an experience
 // (POST /experiences)
-func (cs *CvApiService) CreateExperience(c *gin.Context) {
+func (cs *CvApiHandler) CreateExperience(c *gin.Context) {
 	log.Debugf("About to Create an Experience")
 	var e model.Experience
 	if err := c.ShouldBindJSON(&e); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	cs.cvService.CreateExperience(context.Background(), e)
+	cs.h.CreateExperience(context.Background(), e)
 }
 
 // Info for a specific experience
 // (GET /experiences/{id})
-func (cs *CvApiService) GetExperienceById(c *gin.Context, id string) {
+func (cs *CvApiHandler) GetExperienceById(c *gin.Context, id string) {
 	log.Debugf("About to Get an Experience by Id")
-	e, err := cs.cvService.GetExperienceById(context.Background(), id)
+	e, err := cs.h.GetExperienceById(context.Background(), id)
 	if err != nil {
 		c.Request.Response.StatusCode = 400
 	} else {
@@ -65,7 +67,7 @@ func (cs *CvApiService) GetExperienceById(c *gin.Context, id string) {
 	}
 }
 
-func NewGinCvServer(cvApiService *CvApiService, port string) *http.Server {
+func NewGinCvServer(h *CvApiHandler, port string) *http.Server {
 	log.Debugf("About to create GinCVServer")
 	swagger, err := GetSwagger()
 	if err != nil {
@@ -84,7 +86,7 @@ func NewGinCvServer(cvApiService *CvApiService, port string) *http.Server {
 	// OpenAPI schema.
 	r.Use(middleware.OapiRequestValidator(swagger))
 
-	RegisterHandlers(r, cvApiService)
+	RegisterHandlers(r, h)
 
 	s := &http.Server{
 		Handler: r,

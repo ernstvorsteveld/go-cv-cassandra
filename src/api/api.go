@@ -1,7 +1,3 @@
-// This is an example of implementing the Pet Store from the OpenAPI documentation
-// found at:
-// https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v3.0/petstore.yaml
-
 package api
 
 import (
@@ -86,7 +82,6 @@ func NewGinCvServer(cvApiService *CvApiService, port string) *http.Server {
 	// OpenAPI schema.
 	r.Use(middleware.OapiRequestValidator(swagger))
 
-	// We now register our petStore above as the handler for the interface
 	RegisterHandlers(r, cvApiService)
 
 	s := &http.Server{

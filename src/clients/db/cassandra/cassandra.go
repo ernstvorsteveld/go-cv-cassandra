@@ -17,6 +17,10 @@ type CassandraSession struct {
 	cs     *gocql.Session
 }
 
+func NewCassandraConnection(c *utils.Configuration) db.ExperienceDbAdapter {
+	return ConnectDatabase(c)
+}
+
 func ConnectDatabase(c *utils.Configuration) *CassandraSession {
 	cluster := gocql.NewCluster(c.DB.Cassandra.Url)
 	cluster.Keyspace = c.DB.Cassandra.Keyspace
@@ -78,4 +82,12 @@ func (cc *CassandraSession) Update(ctx context.Context, id string, dto *db.Exper
 		return err
 	}
 	return nil
+}
+
+func (cc *CassandraSession) GetPage(ctx context.Context, page int32, size int16) ([]db.ExperienceDto, error) {
+	return nil, nil
+}
+
+func (cc *CassandraSession) Delete(ctx context.Context, id string) (*db.ExperienceDto, error) {
+	return nil, nil
 }

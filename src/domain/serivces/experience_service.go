@@ -12,20 +12,14 @@ import (
 )
 
 type CvServices struct {
-	cs *cassandra.CassandraSession
+	db db.ExperienceDbAdapter
 }
 
 func NewCvService(c *utils.Configuration) *CvServices {
 	return &CvServices{
-		cs: cassandra.ConnectDatabase(c),
+		db: cassandra.NewCassandraConnection(c),
 	}
 }
-
-// type ExperienceDbAdapter interface {
-// 	Create(dto *db.ExperienceDto) (*db.ExperienceDto, error)
-// 	Get(id string) (*db.ExperienceDto, error)
-// 	List(page int, size int) (*[]model.Experience, error)
-// }
 
 type ExperienceServices interface {
 	ListExperiences(ctx context.Context, page int, size int) (*[]model.Experience, error)
@@ -43,7 +37,7 @@ func (c *CvServices) ListExperiences(ctx context.Context, page int, size int) (*
 
 func (c *CvServices) CreateExperience(ctx context.Context, e model.Experience) (*model.Experience, error) {
 	dto := db.NewExperienceDto(e.GetId(), e.GetName(), e.GetTags())
-	dto, err := c.cs.Create(context.Background(), dto)
+	dto, err := c.db.Create(context.Background(), dto)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -51,7 +45,7 @@ func (c *CvServices) CreateExperience(ctx context.Context, e model.Experience) (
 }
 
 func (c *CvServices) GetExperienceById(ctx context.Context, id string) (*model.Experience, error) {
-	dto, err := c.cs.Get(context.Background(), id)
+	dto, err := c.db.Get(context.Background(), id)
 	if err != nil {
 		return nil, err
 	}

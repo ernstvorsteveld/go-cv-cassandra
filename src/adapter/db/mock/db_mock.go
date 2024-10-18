@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/ernstvorsteveld/go-cv-cassandra/src/clients/db"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/adapter/db"
 	"github.com/google/uuid"
 )
 

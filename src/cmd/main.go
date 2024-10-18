@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
+	api "github.com/ernstvorsteveld/go-cv-cassandra/src/adapter/in/http/gin"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/adapter/out/db/cassandra"
-	"github.com/ernstvorsteveld/go-cv-cassandra/src/api"
 	services "github.com/ernstvorsteveld/go-cv-cassandra/src/domain/serivces"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 

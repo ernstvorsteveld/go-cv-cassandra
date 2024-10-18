@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/ernstvorsteveld/go-cv-cassandra/src/adapter/out/db"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/port/out"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/gocql/gocql"
 	"github.com/pkg/errors"
@@ -16,7 +16,7 @@ type CassandraSession struct {
 	cs     *gocql.Session
 }
 
-func NewCassandraConnection(c *utils.Configuration) db.ExperienceDbAdapter {
+func NewCassandraConnection(c *utils.Configuration) out.ExperienceDbPort {
 	return ConnectDatabase(c)
 }
 
@@ -50,9 +50,9 @@ const stmt_select_by_id string = "SELECT id, name, tags FROM experiences WHERE i
 
 var QryErrorNotFound = errors.Errorf("Not Found")
 
-func (cc *CassandraSession) Create(ctx context.Context, dto *db.ExperienceDto) (*db.ExperienceDto, error) {
+func (cc *CassandraSession) Create(ctx context.Context, dto *out.ExperienceDto) (*out.ExperienceDto, error) {
 	log.Debugf("About to Create Experience %v", dto)
-	dto = db.NewExperienceDto(dto.GetId(), dto.GetName(), dto.GetTags())
+	dto = out.NewExperienceDto(dto.GetId(), dto.GetName(), dto.GetTags())
 	if err := cc.cs.Query(stmt_insert, dto.GetId(), dto.GetName(), dto.GetTags()).Exec(); err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (cc *CassandraSession) Create(ctx context.Context, dto *db.ExperienceDto) (
 	return dto, nil
 }
 
-func (cc *CassandraSession) Get(ctx context.Context, id string) (*db.ExperienceDto, error) {
+func (cc *CassandraSession) Get(ctx context.Context, id string) (*out.ExperienceDto, error) {
 	log.Debugf("About to Get Experience by id %s", id)
 	var _id string
 	var name string
@@ -68,13 +68,13 @@ func (cc *CassandraSession) Get(ctx context.Context, id string) (*db.ExperienceD
 	if err := cc.cs.Query(stmt_select_by_id, id).Consistency(gocql.One).Scan(&_id, &name, &tags); err != nil {
 		return nil, err
 	}
-	e := db.NewExperienceDto(_id, name, tags)
+	e := out.NewExperienceDto(_id, name, tags)
 	return e, nil
 }
 
 const stmt_update string = "UPDATE experiences SET name = ?, tags = ? WHERE id = ?"
 
-func (cc *CassandraSession) Update(ctx context.Context, id string, dto *db.ExperienceDto) error {
+func (cc *CassandraSession) Update(ctx context.Context, id string, dto *out.ExperienceDto) error {
 	log.Debugf("About to Update Experience with id %s with value %v", id, dto)
 	if err := cc.cs.Query(stmt_update, dto.GetName(), dto.GetTags(), id).Exec(); err != nil {
 		return err
@@ -82,10 +82,10 @@ func (cc *CassandraSession) Update(ctx context.Context, id string, dto *db.Exper
 	return nil
 }
 
-func (cc *CassandraSession) GetPage(ctx context.Context, page int32, size int16) ([]db.ExperienceDto, error) {
+func (cc *CassandraSession) GetPage(ctx context.Context, page int32, size int16) ([]out.ExperienceDto, error) {
 	return nil, nil
 }
 
-func (cc *CassandraSession) Delete(ctx context.Context, id string) (*db.ExperienceDto, error) {
+func (cc *CassandraSession) Delete(ctx context.Context, id string) (*out.ExperienceDto, error) {
 	return nil, nil
 }

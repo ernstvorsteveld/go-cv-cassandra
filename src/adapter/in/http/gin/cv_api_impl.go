@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/domain/model"
-	services "github.com/ernstvorsteveld/go-cv-cassandra/src/domain/serivces"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/port/in"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
@@ -20,10 +20,10 @@ type CvApiServices interface {
 }
 
 type CvApiHandler struct {
-	h services.ExperienceServices
+	h in.ExperienceUseCases
 }
 
-func NewCvApiService(s services.ExperienceServices) *CvApiHandler {
+func NewCvApiService(s in.ExperienceUseCases) *CvApiHandler {
 	return &CvApiHandler{
 		h: s,
 	}
@@ -31,7 +31,7 @@ func NewCvApiService(s services.ExperienceServices) *CvApiHandler {
 
 func (cs *CvApiHandler) ListExperiences(c *gin.Context, params ListExperiencesParams) {
 	log.Debugf("About to List Experiences")
-	cs.h.ListExperiences(context.Background(), int(*params.Page), int(*params.Limit))
+	cs.h.ListExperiences(context.Background(), in.NewListExperienceCommand(int(*params.Page), int(*params.Limit)))
 }
 
 // Create an experience
@@ -43,14 +43,14 @@ func (cs *CvApiHandler) CreateExperience(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	cs.h.CreateExperience(context.Background(), e)
+	cs.h.CreateExperience(context.Background(), in.NewCreateExperienceCommand(e.GetName(), e.GetTags()))
 }
 
 // Info for a specific experience
 // (GET /experiences/{id})
 func (cs *CvApiHandler) GetExperienceById(c *gin.Context, id string) {
 	log.Debugf("About to Get an Experience by Id")
-	e, err := cs.h.GetExperienceById(context.Background(), id)
+	e, err := cs.h.GetExperienceById(context.Background(), in.NewGetExperienceCommand(id))
 	if err != nil {
 		c.Request.Response.StatusCode = 400
 	} else {

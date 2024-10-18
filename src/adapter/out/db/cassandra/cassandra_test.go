@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ernstvorsteveld/go-cv-cassandra/src/adapter/out/db"
+	db "github.com/ernstvorsteveld/go-cv-cassandra/src/port/out"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"

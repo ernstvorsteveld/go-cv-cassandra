@@ -61,7 +61,7 @@ func Test_should_create_one_experience(t *testing.T) {
 	name := "value1"
 	tags := []string{"ab", "ac"}
 
-	d, err := session.Create(context.Background(), db.NewExperienceDto("", name, tags))
+	d, err := session.Create(context.Background(), db.NewExperienceDto(uuid.NewString(), name, tags))
 	if err != nil {
 		log.Printf("failed to start container: %s", err)
 	}

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ernstvorsteveld/go-cv-cassandra/src/adapter/db/mock"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/adapter/db/out/mock"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/domain/model"
 	"github.com/stretchr/testify/assert"
 )

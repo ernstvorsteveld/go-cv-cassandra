@@ -1,6 +1,0 @@
-# yaml-language-server: $schema=configuration-schema.json
-package: gin
-generate:
-  gin-server: true
-  embedded-spec: true
-output: ./cv_server.gen.go

@@ -1,4 +1,4 @@
-package gin
+package experiences
 
 import (
 	"context"
@@ -65,6 +65,10 @@ func (cs *CvApiHandler) GetExperienceById(c *gin.Context, id string) {
 			"message": string(body),
 		})
 	}
+}
+
+func (cs *CvApiHandler) ListTags(c *gin.Context) {
+	log.Debugf("About to List Tags")
 }
 
 func NewGinCvServer(h *CvApiHandler, port string) *http.Server {

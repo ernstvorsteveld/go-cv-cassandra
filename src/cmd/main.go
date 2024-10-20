@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	api "github.com/ernstvorsteveld/go-cv-cassandra/src/adapter/in/http/gin"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/adapter/in/http/experiences"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/adapter/out/db/cassandra"
 	services "github.com/ernstvorsteveld/go-cv-cassandra/src/domain/serivces"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
@@ -30,7 +30,7 @@ func main() {
 
 	con := cassandra.NewCassandraConnection(c)
 	h := services.NewCvService(con)
-	server := api.NewGinCvServer(api.NewCvApiService(h), c.Api.Port)
+	server := experiences.NewGinCvServer(experiences.NewCvApiService(h), c.Api.Port)
 
 	// petStore := api.NewPetStore()
 	// s := NewGinPetServer(petStore, *port)

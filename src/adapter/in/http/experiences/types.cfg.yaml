@@ -1,0 +1,5 @@
+# yaml-language-server: $../schema=configuration-schema.json
+package: experiences
+generate:
+  models: true
+output: ./cv_types.gen.go

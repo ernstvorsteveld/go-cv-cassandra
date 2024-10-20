@@ -7,6 +7,7 @@ info:
     name: MIT
 tags:
   - name: Experiences
+  - name: Tags
 servers:
   - url: "http://api.cvapp.com/v1"
 paths:
@@ -53,7 +54,7 @@ paths:
               schema:
                 type: string
             X-CORRELATION-ID:
-              example: "http://api.cvapp.com/v1/experiences/12345678-1234-1234-1234-1234567890ab"
+              example: "12345678-1234-1234-1234-1234567890ab"
               description: Id of the get experiences request
               schema:
                 type: string
@@ -179,6 +180,52 @@ paths:
                 }
               schema:
                 $ref: "#/components/schemas/Error"
+  /tags:
+    get:
+      summary: List all tags
+      description: Returns all tags
+      operationId: listTags
+      tags:
+        - Tags
+      responses:
+        "200":
+          description: An array of tags
+          headers:
+            X-CORRELATION-ID:
+              example: "12345678-1234-1234-1234-1234567890ab"
+              description: Id of the get tags request
+              schema:
+                type: string
+          content:
+            application/json:
+              example:
+                [
+                  {
+                    "id": "12345678-1234-1234-1234-1234567890ab",
+                    "name": "tag1",
+                  },
+                ]
+              schema:
+                $ref: "#/components/schemas/TagsResponse"
+        default:
+          description: Could not find tags
+          headers:
+            X-CORRELATION-ID:
+              example: "12345678-1234-1234-1234-1234567890ab"
+              description: Id of the correlation of the get tags request error
+              schema:
+                type: string
+                example: "12345678-1234-1234-1234-1234567890ab"
+          content:
+            application/json:
+              example:
+                {
+                  "requestId": "12345678-1234-1234-1234-1234567890ab",
+                  "code": "TAG000001",
+                  "message": "Could not find tags",
+                }
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   schemas:
     ObjectId:
@@ -275,3 +322,26 @@ components:
         message:
           type: string
           example: An error occurred
+    TagsResponse:
+      description: List of tags
+      type: array
+      example:
+        [{ "id": "12345678-1234-1234-1234-1234567890ab", "name": "tag1" }]
+      items:
+        $ref: "#/components/schemas/TagResponse"
+    TagResponse:
+      description: A single tag
+      type: object
+      required:
+        - id
+        - name
+      example: { "id": "12345678-1234-1234-1234-1234567890ab", "name": "tag1" }
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "12345678-1234-1234-1234-1234567890ab"
+        name:
+          type: string
+          example: name
+          pattern: "[A-Za-z0-9_-\\s]{3,50}"

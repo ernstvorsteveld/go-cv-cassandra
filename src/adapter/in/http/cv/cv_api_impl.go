@@ -1,4 +1,4 @@
-package experiences
+package cv
 
 import (
 	"context"

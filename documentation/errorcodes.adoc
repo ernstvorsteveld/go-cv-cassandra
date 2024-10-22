@@ -1,0 +1,23 @@
+== Error codes
+
+|===
+|Code |Message
+
+|EXP0000001
+|Error while retrieving experiences.
+
+|EXP0000002
+|Error while marshalling experiences.
+
+|EXP0000003
+|Error while creating experience.
+
+|EXP0000004
+|Error while retrieving tag.
+
+|EXP0000005
+|Error while marschalling tags.
+
+|EXP0000006
+|Error while creating tag.
+|===

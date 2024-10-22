@@ -2,7 +2,6 @@ package cassandra
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/port/out"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
@@ -11,38 +10,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type CassandraSession struct {
+type CassandraExperienceSession struct {
 	config *utils.Configuration
 	cs     *gocql.Session
 }
 
-func NewCassandraConnection(c *utils.Configuration) out.ExperienceDbPort {
-	return ConnectDatabase(c)
-}
-
-func ConnectDatabase(c *utils.Configuration) *CassandraSession {
-	cluster := gocql.NewCluster(c.DB.Cassandra.Url)
-	cluster.Keyspace = c.DB.Cassandra.Keyspace
-	cluster.RetryPolicy = &gocql.SimpleRetryPolicy{
-		NumRetries: int(c.DB.Cassandra.Retries),
-	}
-	cluster.Consistency = gocql.Quorum
-	cluster.Authenticator = gocql.PasswordAuthenticator{
-		Username: c.DB.Cassandra.Username,
-		Password: c.DB.Cassandra.Secret.String(),
-	}
-	cluster.Port, _ = strconv.Atoi(c.DB.Cassandra.Port)
-
-	session, err := cluster.CreateSession()
-	if err != nil {
-		log.Errorf("error: %c", err)
-	}
-
-	cs := &CassandraSession{
+func NewExperiencePort(c *utils.Configuration, s *Session) out.ExperienceDbPort {
+	return &CassandraExperienceSession{
 		config: c,
-		cs:     session,
+		cs:     s.cs,
 	}
-	return cs
 }
 
 const stmt_insert string = "INSERT INTO experiences(id,name,tags) VALUES(?,?,?)"
@@ -50,7 +27,7 @@ const stmt_select_by_id string = "SELECT id, name, tags FROM experiences WHERE i
 
 var QryErrorNotFound = errors.Errorf("Not Found")
 
-func (cc *CassandraSession) Create(ctx context.Context, dto *out.ExperienceDto) (*out.ExperienceDto, error) {
+func (cc *CassandraExperienceSession) Create(ctx context.Context, dto *out.ExperienceDto) (*out.ExperienceDto, error) {
 	log.Debugf("About to Create Experience %v", dto)
 	dto = out.NewExperienceDto(dto.GetId(), dto.GetName(), dto.GetTags())
 	if err := cc.cs.Query(stmt_insert, dto.GetId(), dto.GetName(), dto.GetTags()).Exec(); err != nil {
@@ -60,7 +37,7 @@ func (cc *CassandraSession) Create(ctx context.Context, dto *out.ExperienceDto) 
 	return dto, nil
 }
 
-func (cc *CassandraSession) Get(ctx context.Context, id string) (*out.ExperienceDto, error) {
+func (cc *CassandraExperienceSession) Get(ctx context.Context, id string) (*out.ExperienceDto, error) {
 	log.Debugf("About to Get Experience by id %s", id)
 	var _id string
 	var name string
@@ -74,7 +51,7 @@ func (cc *CassandraSession) Get(ctx context.Context, id string) (*out.Experience
 
 const stmt_update string = "UPDATE experiences SET name = ?, tags = ? WHERE id = ?"
 
-func (cc *CassandraSession) Update(ctx context.Context, id string, dto *out.ExperienceDto) error {
+func (cc *CassandraExperienceSession) Update(ctx context.Context, id string, dto *out.ExperienceDto) error {
 	log.Debugf("About to Update Experience with id %s with value %v", id, dto)
 	if err := cc.cs.Query(stmt_update, dto.GetName(), dto.GetTags(), id).Exec(); err != nil {
 		return err
@@ -82,10 +59,10 @@ func (cc *CassandraSession) Update(ctx context.Context, id string, dto *out.Expe
 	return nil
 }
 
-func (cc *CassandraSession) GetPage(ctx context.Context, page int32, size int16) ([]out.ExperienceDto, error) {
+func (cc *CassandraExperienceSession) GetPage(ctx context.Context, page int32, size int16) ([]out.ExperienceDto, error) {
 	return nil, nil
 }
 
-func (cc *CassandraSession) Delete(ctx context.Context, id string) (*out.ExperienceDto, error) {
+func (cc *CassandraExperienceSession) Delete(ctx context.Context, id string) (*out.ExperienceDto, error) {
 	return nil, nil
 }

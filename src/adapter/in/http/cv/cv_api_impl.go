@@ -11,6 +11,7 @@ import (
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/domain/model"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/port/in"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 
 	middleware "github.com/oapi-codegen/gin-middleware"
@@ -20,18 +21,30 @@ type CvApiServices interface {
 }
 
 type CvApiHandler struct {
-	h in.ExperienceUseCases
+	u in.UseCases
 }
 
-func NewCvApiService(s in.ExperienceUseCases) *CvApiHandler {
+func NewCvApiService(u in.UseCases) *CvApiHandler {
 	return &CvApiHandler{
-		h: s,
+		u: u,
 	}
 }
 
 func (cs *CvApiHandler) ListExperiences(c *gin.Context, params ListExperiencesParams) {
 	log.Debugf("About to List Experiences")
-	cs.h.ListExperiences(context.Background(), in.NewListExperienceCommand(int(*params.Page), int(*params.Limit)))
+	es, err := cs.u.ListExperiences(context.Background(), in.NewListExperienceCommand(int(*params.Page), int(*params.Limit)))
+	if err == nil {
+		e := Error{Code: "EXP0000002", Message: "Error while retrieving experiences.", RequestId: uuid.New()}
+		c.JSON(http.StatusInternalServerError, e)
+	}
+	body, err := json.Marshal(es)
+	if err != nil {
+		e := Error{Code: "EXP0000003", Message: "Error while marshalling experiences.", RequestId: uuid.New()}
+		c.JSON(http.StatusInternalServerError, e)
+		return
+	}
+
+	c.JSON(http.StatusOK, string(body))
 }
 
 // Create an experience
@@ -43,14 +56,14 @@ func (cs *CvApiHandler) CreateExperience(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	cs.h.CreateExperience(context.Background(), in.NewCreateExperienceCommand(e.GetName(), e.GetTags()))
+	cs.u.CreateExperience(context.Background(), in.NewCreateExperienceCommand(e.GetName(), e.GetTags()))
 }
 
 // Info for a specific experience
 // (GET /experiences/{id})
 func (cs *CvApiHandler) GetExperienceById(c *gin.Context, id string) {
 	log.Debugf("About to Get an Experience by Id")
-	e, err := cs.h.GetExperienceById(context.Background(), in.NewGetExperienceCommand(id))
+	e, err := cs.u.GetExperienceById(context.Background(), in.NewGetExperienceCommand(id))
 	if err != nil {
 		c.Request.Response.StatusCode = 400
 	} else {
@@ -68,7 +81,8 @@ func (cs *CvApiHandler) GetExperienceById(c *gin.Context, id string) {
 }
 
 func (cs *CvApiHandler) ListTags(c *gin.Context) {
-	log.Debugf("About to List Tags")
+	log.Debugf("About to List Tags, using defaults page=0 and size=100")
+	cs.u.ListTags(context.Background(), in.NewListTagsCommand(int(0), int(100)))
 }
 
 func NewGinCvServer(h *CvApiHandler, port string) *http.Server {

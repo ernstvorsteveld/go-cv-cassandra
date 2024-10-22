@@ -28,8 +28,10 @@ func main() {
 	c.Read("config", "yml")
 	c.Print()
 
-	con := cassandra.NewCassandraConnection(c)
-	h := services.NewCvService(con)
+	session := cassandra.NewCassandraSession(c)
+	ep := cassandra.NewExperiencePort(c, session)
+	tp := cassandra.NewTagPort(c, session)
+	h := services.NewCvServices(ep, tp)
 	server := cv.NewGinCvServer(cv.NewCvApiService(h), c.Api.Port)
 
 	// petStore := api.NewPetStore()

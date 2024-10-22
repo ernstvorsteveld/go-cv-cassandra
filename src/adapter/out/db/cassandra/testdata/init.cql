@@ -2,3 +2,5 @@ CREATE KEYSPACE testcv WITH replication = {'class':'SimpleStrategy', 'replicatio
 
 CREATE TABLE testcv.experiences(id text primary key, name text, tags set<text>);
 CREATE INDEX IF NOT EXISTS experiences_name ON testcv.experiences (name);
+
+CREATE TABLE testcv.tags(id text primary key, name text);

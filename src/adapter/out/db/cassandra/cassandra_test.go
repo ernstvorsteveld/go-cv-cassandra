@@ -16,7 +16,8 @@ import (
 )
 
 var cassandraContainer *cassandra.CassandraContainer
-var session *CassandraSession
+var session *Session
+var eDBPort db.ExperienceDbPort
 
 func TestMain(m *testing.M) {
 	log.Infof("Creating Cassandra Session in TestMain")
@@ -39,7 +40,7 @@ func TestMain(m *testing.M) {
 
 	rawPort, _ := cassandraContainer.MappedPort(ctx, "9042")
 	parts := strings.Split(rawPort.Port(), "/")
-	session = ConnectDatabase(&utils.Configuration{
+	config := &utils.Configuration{
 		DB: utils.DBConfiguration{
 			Cassandra: utils.CassandraConfiguration{
 				Keyspace: "testcv",
@@ -48,9 +49,10 @@ func TestMain(m *testing.M) {
 				Retries:  int8(3),
 				Username: "cassandra",
 				Secret:   utils.SensitiveInfo("cassandra"),
-			}}})
-
+			}}}
+	session = NewCassandraSession(config)
 	log.Infof("Details: %v", session)
+	eDBPort = NewExperiencePort(config, session)
 
 	m.Run()
 
@@ -61,7 +63,7 @@ func Test_should_create_one_experience(t *testing.T) {
 	name := "value1"
 	tags := []string{"ab", "ac"}
 
-	d, err := session.Create(context.Background(), db.NewExperienceDto(uuid.NewString(), name, tags))
+	d, err := eDBPort.Create(context.Background(), db.NewExperienceDto(uuid.NewString(), name, tags))
 	if err != nil {
 		log.Printf("failed to start container: %s", err)
 	}
@@ -93,7 +95,7 @@ func insertOne() (string, string, []string) {
 func Test_should_get_one_experience(t *testing.T) {
 	id, name, tags := insertOne()
 
-	d, err := session.Get(context.Background(), id)
+	d, err := eDBPort.Get(context.Background(), id)
 	assert.Nil(t, err)
 	assert.Equal(t, id, d.GetId())
 	assert.Equal(t, name, d.GetName())
@@ -108,7 +110,7 @@ func Test_should_update_one_experience(t *testing.T) {
 	name := "updated-value"
 	tags := []string{"aaa", "bbb", "ccc", "ddd"}
 
-	err := session.Update(context.Background(), id, db.NewExperienceDto(id, name, tags))
+	err := eDBPort.Update(context.Background(), id, db.NewExperienceDto(id, name, tags))
 	if err != nil {
 		log.Errorf("error while updating %v", err)
 	}

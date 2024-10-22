@@ -14,24 +14,46 @@ package domain {
 
     package model {
         class experience
+        class tag
     }
 
     package services {
+        class services
         class experience_service
+        class tag_service
+
+        services -right-> experience_service
+        services -left-> tag_service
     }
 
-    api.cv_api_impl -> services.experience_service
+    api.cv_api_impl --> port.in.usecases
 }
 
-package clients.db {
+package port.in {
+    class usecases
+    class experience_usecases
+    class tags_usecases
 
-    class ExperienceDbAdapter
+    usecases -right-> port.in.experience_usecases
+    usecases -left-> port.in.tags_usecases
 
-    package cassandra {
-        class cassandra
-    }
+    port.in.usecases --> domain.services.services
+}
 
-    domain.services.experience_service -down-> ExperienceDbAdapter
+package port.out {
+    class ExperienceDbPort
+    class TagDbPort
+
+    domain.services.services -down-> ExperienceDbPort
+    domain.services.services -down-> TagDbPort
+}
+
+package db.cassandra{
+    class CassandraExperienceDbAdapter
+    class CassandraTagDbAdapter
+
+    port.out.ExperienceDbPort -down-> CassandraExperienceDbAdapter
+    port.out.TagDbPort -down-> CassandraTagDbAdapter
 }
 
 

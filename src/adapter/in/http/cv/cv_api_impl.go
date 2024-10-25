@@ -12,6 +12,7 @@ import (
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/port/in"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 
 	middleware "github.com/oapi-codegen/gin-middleware"
@@ -73,16 +74,19 @@ func (cs *CvApiHandler) GetExperienceById(c *gin.Context, id string) {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"code":    http.StatusOK,
-			"message": string(body),
-		})
+		c.JSON(http.StatusOK, body)
 	}
 }
 
 func (cs *CvApiHandler) ListTags(c *gin.Context) {
 	log.Debugf("About to List Tags, using defaults page=0 and size=100")
-	cs.u.ListTags(context.Background(), in.NewListTagsCommand(int(0), int(100)))
+	tags, _ := cs.u.ListTags(context.Background(), in.NewListTagsCommand(int(0), int(100)))
+	c.JSON(http.StatusOK, tags)
+}
+
+func (cs *CvApiHandler) Metrics(c *gin.Context) {
+	log.Debugf("About to GET Metrics.")
+	promhttp.Handler().ServeHTTP(c.Writer, c.Request)
 }
 
 func NewGinCvServer(h *CvApiHandler, port string) *http.Server {

@@ -34,6 +34,9 @@ type ExperiencePayload struct {
 // Experiences Array of experiences
 type Experiences = []Experience
 
+// MetricsResponse Metrics for Prometheus response
+type MetricsResponse = string
+
 // ObjectId ObjectId
 type ObjectId struct {
 	Id *openapi_types.UUID `json:"id,omitempty"`

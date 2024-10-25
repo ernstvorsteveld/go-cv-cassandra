@@ -7,8 +7,19 @@ import (
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/adapter/out/db/cassandra"
 	services "github.com/ernstvorsteveld/go-cv-cassandra/src/domain/serivces"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
+	"github.com/prometheus/client_golang/prometheus"
 
 	log "github.com/sirupsen/logrus"
+)
+
+var (
+	HttpRequestCountWithPath = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total_with_path",
+			Help: "Number of HTTP requests by path.",
+		},
+		[]string{"url"},
+	)
 )
 
 func init() {
@@ -21,6 +32,9 @@ func init() {
 
 	// Only log the warning severity or above.
 	log.SetLevel(log.DebugLevel)
+
+	log.Debugf("Register Handler for Prometheus")
+	prometheus.MustRegister(HttpRequestCountWithPath)
 }
 
 func main() {
@@ -34,8 +48,5 @@ func main() {
 	h := services.NewCvServices(ep, tp)
 	server := cv.NewGinCvServer(cv.NewCvApiService(h), c.Api.Port)
 
-	// petStore := api.NewPetStore()
-	// s := NewGinPetServer(petStore, *port)
-	// // And we serve HTTP until the world ends.
 	log.Fatal(server.ListenAndServe())
 }

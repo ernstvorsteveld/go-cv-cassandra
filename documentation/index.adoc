@@ -28,3 +28,8 @@ go generate ./src/api/cv_api.go
 ----
 plantuml::overview.pu[png]
 ----
+
+
+== Templates
+
+https://github.com/oapi-codegen/oapi-codegen/blob/main/pkg/codegen/templates/gin/gin-interface.tmpl

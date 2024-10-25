@@ -173,8 +173,8 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/experiences", wrapper.ListExperiences)
 	router.POST(options.BaseURL+"/experiences", wrapper.CreateExperience)
 	router.GET(options.BaseURL+"/experiences/:id", wrapper.GetExperienceById)
-	router.GET(options.BaseURL+"/metrics", wrapper.Metrics)
 	router.GET(options.BaseURL+"/tags", wrapper.ListTags)
+	router.GET(options.BaseURL+"/metrics", wrapper.Metrics)
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object

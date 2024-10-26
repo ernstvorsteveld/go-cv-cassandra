@@ -10,7 +10,7 @@ type InServices struct {
 	tp out.TagDbPort
 }
 
-func NewCvServices(ep out.ExperienceDbPort, tp out.TagDbPort) in.UseCases {
+func NewCvServices(ep out.ExperienceDbPort, tp out.TagDbPort) in.UseCasesPort {
 	return &InServices{
 		ep: ep,
 		tp: tp,

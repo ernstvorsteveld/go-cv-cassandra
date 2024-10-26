@@ -6,7 +6,7 @@ import (
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/domain/model"
 )
 
-type UseCases interface {
+type UseCasesPort interface {
 	ListTags(ctx context.Context, c *ListTagsCommand) (*model.Tags, error)
 	GetTagById(ctx context.Context, c *GetTagByIdCommand) (*model.Tag, error)
 

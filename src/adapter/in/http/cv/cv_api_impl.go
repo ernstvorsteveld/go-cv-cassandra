@@ -22,10 +22,10 @@ type CvApiServices interface {
 }
 
 type CvApiHandler struct {
-	u in.UseCases
+	u in.UseCasesPort
 }
 
-func NewCvApiService(u in.UseCases) *CvApiHandler {
+func NewCvApiService(u in.UseCasesPort) *CvApiHandler {
 	return &CvApiHandler{
 		u: u,
 	}

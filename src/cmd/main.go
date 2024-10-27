@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+	"log/slog"
 	"os"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/adapter/in/http/cv"
@@ -8,8 +10,6 @@ import (
 	services "github.com/ernstvorsteveld/go-cv-cassandra/src/domain/serivces"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/prometheus/client_golang/prometheus"
-
-	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -23,17 +23,10 @@ var (
 )
 
 func init() {
-	// Log as JSON instead of the default ASCII formatter.
-	log.SetFormatter(&log.JSONFormatter{})
+	logger := slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	slog.SetDefault(logger)
 
-	// Output to stdout instead of the default stderr
-	// Can be any io.Writer, see below for File example
-	log.SetOutput(os.Stdout)
-
-	// Only log the warning severity or above.
-	log.SetLevel(log.DebugLevel)
-
-	log.Debugf("Register Handler for Prometheus")
+	slog.Info("Register Handler for Prometheus")
 	prometheus.MustRegister(HttpRequestCountWithPath)
 }
 

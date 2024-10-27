@@ -8,12 +8,14 @@ import (
 	"net/http"
 	"os"
 
+	"log/slog"
+
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/domain/model"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/port/in"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	log "github.com/sirupsen/logrus"
 
 	middleware "github.com/oapi-codegen/gin-middleware"
 )
@@ -32,7 +34,7 @@ func NewCvApiService(u in.UseCasesPort) *CvApiHandler {
 }
 
 func (cs *CvApiHandler) ListExperiences(c *gin.Context, params ListExperiencesParams) {
-	log.Debugf("About to List Experiences")
+	slog.Debug("ListExperiences", "content", "About to List Experiences")
 	es, err := cs.u.ListExperiences(context.Background(), in.NewListExperienceCommand(int(*params.Page), int(*params.Limit)))
 	if err == nil {
 		e := Error{Code: "EXP0000002", Message: "Error while retrieving experiences.", RequestId: uuid.New()}
@@ -51,19 +53,20 @@ func (cs *CvApiHandler) ListExperiences(c *gin.Context, params ListExperiencesPa
 // Create an experience
 // (POST /experiences)
 func (cs *CvApiHandler) CreateExperience(c *gin.Context) {
-	log.Debugf("About to Create an Experience")
+	slog.Debug("CreateExperience", "content", "About to Create an Experience")
 	var e model.Experience
 	if err := c.ShouldBindJSON(&e); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	cs.u.CreateExperience(context.Background(), in.NewCreateExperienceCommand(e.GetName(), e.GetTags()))
+	context := utils.NewDefaultContext()
+	cs.u.CreateExperience(context.Build(), in.NewCreateExperienceCommand(e.GetName(), e.GetTags()))
 }
 
 // Info for a specific experience
 // (GET /experiences/{id})
 func (cs *CvApiHandler) GetExperienceById(c *gin.Context, id string) {
-	log.Debugf("About to Get an Experience by Id")
+	slog.Debug("GetExperienceById", "content", "About to Get Experience by Id", "correctId", Get("correlationId", c))
 	e, err := cs.u.GetExperienceById(context.Background(), in.NewGetExperienceCommand(id))
 	if err != nil {
 		c.Request.Response.StatusCode = 400
@@ -79,18 +82,18 @@ func (cs *CvApiHandler) GetExperienceById(c *gin.Context, id string) {
 }
 
 func (cs *CvApiHandler) ListTags(c *gin.Context) {
-	log.Debugf("About to List Tags, using defaults page=0 and size=100")
+	slog.Debug("ListTags", "content", "About to List Tags, using defaults page=0 and size=100")
 	tags, _ := cs.u.ListTags(context.Background(), in.NewListTagsCommand(int(0), int(100)))
 	c.JSON(http.StatusOK, tags)
 }
 
 func (cs *CvApiHandler) Metrics(c *gin.Context) {
-	log.Debugf("About to GET Metrics.")
+	slog.Debug("Metrics", "content", "About to GET Metrics.")
 	promhttp.Handler().ServeHTTP(c.Writer, c.Request)
 }
 
 func NewGinCvServer(h *CvApiHandler, port string) *http.Server {
-	log.Debugf("About to create GinCVServer")
+	slog.Debug("NewGinCvServer", "content", "About to create GinCVServer")
 	swagger, err := GetSwagger()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading swagger spec\n: %s", err)
@@ -104,6 +107,8 @@ func NewGinCvServer(h *CvApiHandler, port string) *http.Server {
 	// This is how you set up a basic gin router
 	r := gin.Default()
 
+	r.Use(Authenticate)
+
 	// Use our validation middleware to check all requests against the
 	// OpenAPI schema.
 	r.Use(middleware.OapiRequestValidator(swagger))
@@ -115,4 +120,17 @@ func NewGinCvServer(h *CvApiHandler, port string) *http.Server {
 		Addr:    net.JoinHostPort("0.0.0.0", port),
 	}
 	return s
+}
+
+func Authenticate(c *gin.Context) {
+	slog.Debug("Authenticate", "content", "About to authenticate", "correlationId", Get("correlationId", c))
+	c.Next()
+}
+
+func Get(k string, c *gin.Context) any {
+	value, exists := c.Get(k)
+	if !exists {
+		return "UNKNOWN"
+	}
+	return value
 }

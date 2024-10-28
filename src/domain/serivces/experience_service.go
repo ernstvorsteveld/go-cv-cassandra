@@ -3,10 +3,12 @@ package services
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/domain/model"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/port/in"
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/port/out"
+	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )
@@ -29,6 +31,7 @@ func (c *InServices) CreateExperience(ctx context.Context, command *in.CreateExp
 }
 
 func (c *InServices) GetExperienceById(ctx context.Context, command *in.GetExperienceCommand) (*model.Experience, error) {
+	slog.Debug("serivces.GetExperienceById", "content", "About to Get Experience by Id", "correctId", utils.Get("correlationId", ctx))
 	dto, err := c.ep.Get(context.Background(), command.Id)
 	if err != nil {
 		return nil, err

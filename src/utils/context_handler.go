@@ -9,27 +9,39 @@ const correlationId string = "correlationId"
 const parentCorrelationId string = "parentCorrelationId"
 
 type ContextWrapper struct {
+	g IdGenerator
 	c context.Context
 	m map[string]any
 }
 
-func NewDefaultContext() *ContextWrapper {
+func NewDefaultContextWrapper() *ContextWrapper {
 	return &ContextWrapper{
+		g: NewDefaultUuidGenerator(),
 		c: context.Background(),
 		m: make(map[string]any),
 	}
 }
 
-func (w *ContextWrapper) AddParentCorrelationId(v string) {
-	w.m = add(w.m, parentCorrelationId, v)
+func NewContextWrapper(ig IdGenerator) *ContextWrapper {
+	return &ContextWrapper{
+		g: ig,
+		c: context.Background(),
+		m: make(map[string]any),
+	}
+}
+
+func (w *ContextWrapper) AddParentCorrelationId() *ContextWrapper {
+	w.m = add(w.m, parentCorrelationId, w.g.UUIDString())
+	return w
 }
 
 func GetCorrelationId(c context.Context) string {
 	return c.Value(correlationId).(string)
 }
 
-func (w *ContextWrapper) AddCorrelationId(v string) {
-	w.m = add(w.m, correlationId, v)
+func (w *ContextWrapper) AddCorrelationId() *ContextWrapper {
+	w.m = add(w.m, correlationId, w.g.UUIDString())
+	return w
 }
 
 func GetParentCorrelationId(c context.Context) string {
@@ -47,4 +59,12 @@ func (w *ContextWrapper) Build() context.Context {
 		w.c = context.WithValue(w.c, k, v)
 	}
 	return w.c
+}
+
+func Get(k string, c context.Context) any {
+	v := c.Value(k)
+	if v == nil {
+		return "UNKNOWN"
+	}
+	return v.(string)
 }

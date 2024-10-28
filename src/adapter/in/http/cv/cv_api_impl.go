@@ -59,15 +59,16 @@ func (cs *CvApiHandler) CreateExperience(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	context := utils.NewDefaultContext()
-	cs.u.CreateExperience(context.Build(), in.NewCreateExperienceCommand(e.GetName(), e.GetTags()))
+	ctx := utils.NewDefaultContextWrapper().AddCorrelationId().Build()
+	cs.u.CreateExperience(ctx, in.NewCreateExperienceCommand(e.GetName(), e.GetTags()))
 }
 
 // Info for a specific experience
 // (GET /experiences/{id})
 func (cs *CvApiHandler) GetExperienceById(c *gin.Context, id string) {
-	slog.Debug("GetExperienceById", "content", "About to Get Experience by Id", "correctId", Get("correlationId", c))
-	e, err := cs.u.GetExperienceById(context.Background(), in.NewGetExperienceCommand(id))
+	slog.Debug("cv.GetExperienceById", "content", "About to Get Experience by Id", "correlationId", utils.Get("correlationId", c))
+	ctx := utils.NewDefaultContextWrapper().AddCorrelationId().Build()
+	e, err := cs.u.GetExperienceById(ctx, in.NewGetExperienceCommand(id))
 	if err != nil {
 		c.Request.Response.StatusCode = 400
 	} else {

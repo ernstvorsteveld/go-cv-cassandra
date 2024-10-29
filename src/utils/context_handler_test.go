@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"testing"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/src/utils/mock"
@@ -11,8 +12,7 @@ import (
 func Test_should_correlation_id(t *testing.T) {
 	uuid := uuid.New()
 
-	w := NewContextWrapper(mock.NewMockUuidGenerator(uuid))
-	w.AddCorrelationId()
+	w := NewContextWrapper(context.Background(), mock.NewMockUuidGenerator(uuid))
 	w.AddParentCorrelationId()
 	ctx := w.Build()
 

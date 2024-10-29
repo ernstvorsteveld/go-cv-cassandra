@@ -20,6 +20,12 @@ import (
 	middleware "github.com/oapi-codegen/gin-middleware"
 )
 
+var idGenerator = utils.NewDefaultUuidGenerator()
+
+const expectedHost = "localhost:8091"
+const CORRELATION_ID_HEADER = "X-CORRELATION-ID"
+const LOCATION_HEADER = "Location"
+
 type CvApiServices interface {
 }
 
@@ -34,56 +40,65 @@ func NewCvApiService(u in.UseCasesPort) *CvApiHandler {
 }
 
 func (cs *CvApiHandler) ListExperiences(c *gin.Context, params ListExperiencesParams) {
-	slog.Debug("ListExperiences", "content", "About to List Experiences")
-	es, err := cs.u.ListExperiences(context.Background(), in.NewListExperienceCommand(int(*params.Page), int(*params.Limit)))
+	slog.Debug("cv.ListExperiences", "content", "About to List Experiences", "correlationId", Get(CORRELATION_ID_HEADER, c))
+	ctx := utils.NewDefaultContextWrapper(c, Get(CORRELATION_ID_HEADER, c).(string)).Build()
+	es, err := cs.u.ListExperiences(ctx, in.NewListExperienceCommand(int(*params.Page), int(*params.Limit)))
 	if err == nil {
 		e := Error{Code: "EXP0000002", Message: "Error while retrieving experiences.", RequestId: uuid.New()}
 		c.JSON(http.StatusInternalServerError, e)
 	}
-	body, err := json.Marshal(es)
+	_, err = json.Marshal(es)
 	if err != nil {
 		e := Error{Code: "EXP0000003", Message: "Error while marshalling experiences.", RequestId: uuid.New()}
 		c.JSON(http.StatusInternalServerError, e)
 		return
 	}
 
-	c.JSON(http.StatusOK, string(body))
+	c.JSON(http.StatusOK, es)
 }
 
 // Create an experience
 // (POST /experiences)
 func (cs *CvApiHandler) CreateExperience(c *gin.Context) {
-	slog.Debug("CreateExperience", "content", "About to Create an Experience")
+	slog.Debug("cv.CreateExperience", "content", "About to Create an Experience", "correlationId", Get(CORRELATION_ID_HEADER, c))
 	var e model.Experience
 	if err := c.ShouldBindJSON(&e); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	ctx := utils.NewDefaultContextWrapper().AddCorrelationId().Build()
-	cs.u.CreateExperience(ctx, in.NewCreateExperienceCommand(e.GetName(), e.GetTags()))
+	ctx := utils.NewDefaultContextWrapper(c, Get(CORRELATION_ID_HEADER, c).(string)).Build()
+	m, err := cs.u.CreateExperience(ctx, in.NewCreateExperienceCommand(e.GetName(), e.GetTags()))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	location := fmt.Sprintf("http://localhost:8091/experiences/%s", m.Id)
+	c.Writer.Header().Set(LOCATION_HEADER, location)
+	c.JSON(http.StatusCreated, m.Id)
 }
 
 // Info for a specific experience
 // (GET /experiences/{id})
 func (cs *CvApiHandler) GetExperienceById(c *gin.Context, id string) {
-	slog.Debug("cv.GetExperienceById", "content", "About to Get Experience by Id", "correlationId", utils.Get("correlationId", c))
-	ctx := utils.NewDefaultContextWrapper().AddCorrelationId().Build()
+	slog.Debug("cv.GetExperienceById", "content", "About to Get Experience by Id", "correlationId", Get(CORRELATION_ID_HEADER, c))
+	ctx := utils.NewDefaultContextWrapper(c, Get(CORRELATION_ID_HEADER, c).(string)).Build()
 	e, err := cs.u.GetExperienceById(ctx, in.NewGetExperienceCommand(id))
-	if err != nil {
-		c.Request.Response.StatusCode = 400
-	} else {
-		body, err := json.Marshal(e)
+	if err == nil {
+		_, err := json.Marshal(e)
 		if err != nil {
 			c.JSON(400, nil)
 			return
 		}
 
-		c.JSON(http.StatusOK, body)
+		c.JSON(http.StatusOK, e)
+
+	} else {
+		c.Request.Response.StatusCode = 400
 	}
 }
 
 func (cs *CvApiHandler) ListTags(c *gin.Context) {
-	slog.Debug("ListTags", "content", "About to List Tags, using defaults page=0 and size=100")
+	slog.Debug("cv.ListTags", "content", "About to List Tags, using defaults page=0 and size=100")
 	tags, _ := cs.u.ListTags(context.Background(), in.NewListTagsCommand(int(0), int(100)))
 	c.JSON(http.StatusOK, tags)
 }
@@ -108,7 +123,7 @@ func NewGinCvServer(h *CvApiHandler, port string) *http.Server {
 	// This is how you set up a basic gin router
 	r := gin.Default()
 
-	r.Use(Authenticate)
+	r.Use(CorrelationId, Authenticate, SecurityHeaders)
 
 	// Use our validation middleware to check all requests against the
 	// OpenAPI schema.
@@ -123,14 +138,37 @@ func NewGinCvServer(h *CvApiHandler, port string) *http.Server {
 	return s
 }
 
+func CorrelationId(c *gin.Context) {
+	correlationId := idGenerator.UUIDString()
+	slog.Debug("cv.CorrelationId", "content", "About to add correlationId", "correlationId", correlationId)
+	c.Header(CORRELATION_ID_HEADER, correlationId)
+	c.Next()
+}
+
 func Authenticate(c *gin.Context) {
-	slog.Debug("Authenticate", "content", "About to authenticate", "correlationId", Get("correlationId", c))
+	slog.Debug("cv.Authenticate", "content", "About to authenticate", "correlationId", Get(CORRELATION_ID_HEADER, c))
+	c.Next()
+}
+
+func SecurityHeaders(c *gin.Context) {
+	slog.Debug("cv.SecurityHeaders", "content", "About to add security headers", "correlationId", Get(CORRELATION_ID_HEADER, c))
+	if c.Request.Host != expectedHost {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid host header"})
+		return
+	}
+	c.Header("X-Frame-Options", "DENY")
+	c.Header("X-XSS-Protection", "1; mode=block")
+	c.Header("X-Content-Type-Options", "nosniff")
+	c.Header("Referrer-Policy", "strict-origin")
+	c.Header("X-Content-Type-Options", "nosniff")
+	c.Header("Content-Security-Policy", "default-src 'self'; connect-src *; font-src *; script-src-elem * 'unsafe-inline'; img-src * data:; style-src * 'unsafe-inline';")
+	c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 	c.Next()
 }
 
 func Get(k string, c *gin.Context) any {
-	value, exists := c.Get(k)
-	if !exists {
+	value := c.Writer.Header().Get(CORRELATION_ID_HEADER)
+	if value == "" {
 		return "UNKNOWN"
 	}
 	return value

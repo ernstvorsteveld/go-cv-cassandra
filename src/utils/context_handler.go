@@ -5,8 +5,9 @@ import (
 	"log/slog"
 )
 
-const correlationId string = "correlationId"
-const parentCorrelationId string = "parentCorrelationId"
+const CORRELATION_ID_HEADER = "X-CORRELATION-ID"
+const CORRELATION_ID = "correlationId"
+const PARENT_CORRELATION_ID = "parentCorrelationId"
 
 type ContextWrapper struct {
 	g IdGenerator
@@ -14,38 +15,37 @@ type ContextWrapper struct {
 	m map[string]any
 }
 
-func NewDefaultContextWrapper() *ContextWrapper {
-	return &ContextWrapper{
+func NewDefaultContextWrapper(pc context.Context, correlationId string) *ContextWrapper {
+	w := ContextWrapper{
 		g: NewDefaultUuidGenerator(),
-		c: context.Background(),
+		c: pc,
 		m: make(map[string]any),
 	}
+	w.m[CORRELATION_ID] = correlationId
+	return &w
 }
 
-func NewContextWrapper(ig IdGenerator) *ContextWrapper {
-	return &ContextWrapper{
+func NewContextWrapper(pc context.Context, ig IdGenerator) *ContextWrapper {
+	w := ContextWrapper{
 		g: ig,
-		c: context.Background(),
+		c: pc,
 		m: make(map[string]any),
 	}
+	w.m[CORRELATION_ID] = ig.UUIDString()
+	return &w
 }
 
 func (w *ContextWrapper) AddParentCorrelationId() *ContextWrapper {
-	w.m = add(w.m, parentCorrelationId, w.g.UUIDString())
+	w.m = add(w.m, PARENT_CORRELATION_ID, w.g.UUIDString())
 	return w
 }
 
 func GetCorrelationId(c context.Context) string {
-	return c.Value(correlationId).(string)
-}
-
-func (w *ContextWrapper) AddCorrelationId() *ContextWrapper {
-	w.m = add(w.m, correlationId, w.g.UUIDString())
-	return w
+	return c.Value(CORRELATION_ID).(string)
 }
 
 func GetParentCorrelationId(c context.Context) string {
-	return c.Value(parentCorrelationId).(string)
+	return c.Value(PARENT_CORRELATION_ID).(string)
 }
 
 func add(m map[string]any, k string, v any) map[string]any {

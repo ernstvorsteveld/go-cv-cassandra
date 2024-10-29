@@ -21,6 +21,7 @@ import (
 )
 
 var idGenerator = utils.NewDefaultUuidGenerator()
+var expecectedHosts StringArray
 
 const expectedHost = "localhost:8091"
 const CORRELATION_ID_HEADER = "X-CORRELATION-ID"
@@ -31,11 +32,13 @@ type CvApiServices interface {
 
 type CvApiHandler struct {
 	u in.UseCasesPort
+	c *utils.Configuration
 }
 
-func NewCvApiService(u in.UseCasesPort) *CvApiHandler {
+func NewCvApiService(u in.UseCasesPort, c *utils.Configuration) *CvApiHandler {
 	return &CvApiHandler{
 		u: u,
+		c: c,
 	}
 }
 
@@ -108,8 +111,9 @@ func (cs *CvApiHandler) Metrics(c *gin.Context) {
 	promhttp.Handler().ServeHTTP(c.Writer, c.Request)
 }
 
-func NewGinCvServer(h *CvApiHandler, port string) *http.Server {
+func NewGinCvServer(h *CvApiHandler, c *utils.Configuration) *http.Server {
 	slog.Debug("NewGinCvServer", "content", "About to create GinCVServer")
+	expecectedHosts = c.Api.Expectedhosts
 	swagger, err := GetSwagger()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading swagger spec\n: %s", err)
@@ -133,7 +137,7 @@ func NewGinCvServer(h *CvApiHandler, port string) *http.Server {
 
 	s := &http.Server{
 		Handler: r,
-		Addr:    net.JoinHostPort("0.0.0.0", port),
+		Addr:    net.JoinHostPort("0.0.0.0", c.Api.Port),
 	}
 	return s
 }
@@ -152,7 +156,7 @@ func Authenticate(c *gin.Context) {
 
 func SecurityHeaders(c *gin.Context) {
 	slog.Debug("cv.SecurityHeaders", "content", "About to add security headers", "correlationId", Get(CORRELATION_ID_HEADER, c))
-	if c.Request.Host != expectedHost {
+	if !expecectedHosts.contains(c.Request.Host) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid host header"})
 		return
 	}
@@ -172,4 +176,16 @@ func Get(k string, c *gin.Context) any {
 		return "UNKNOWN"
 	}
 	return value
+}
+
+type StringArray []string
+
+func (v StringArray) contains(s string) bool {
+	// iterate using the for loop
+	for i := 0; i < len(v); i++ {
+		if v[i] == s {
+			return true
+		}
+	}
+	return false
 }

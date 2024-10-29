@@ -39,7 +39,7 @@ func main() {
 	ep := cassandra.NewExperiencePort(c, session)
 	tp := cassandra.NewTagPort(c, session)
 	h := services.NewCvServices(ep, tp)
-	server := cv.NewGinCvServer(cv.NewCvApiService(h), c.Api.Port)
+	server := cv.NewGinCvServer(cv.NewCvApiService(h, c), c)
 
 	log.Fatal(server.ListenAndServe())
 }

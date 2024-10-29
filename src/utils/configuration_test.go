@@ -10,6 +10,9 @@ func Test_should_read_configuration(t *testing.T) {
 	c := Configuration{}
 	c.Read("test_config", "yml")
 
+	assert.Equal(t, "8091", c.Api.Port, "The Api Ports incorrect.")
+	assert.Equal(t, []string{"localhost:8091", "localhost:8092"}, c.Api.Expectedhosts, "The Api Expectehosts incorrect.")
+
 	assert.Equal(t, "127.0.0.1", c.DB.Cassandra.Url, "The Cassandra DB url is incorrect.")
 	assert.Equal(t, "cv", c.DB.Cassandra.Keyspace, "The Keyspace is incorrect.")
 	assert.Equal(t, int8(3), c.DB.Cassandra.Retries, "The Retries is incorrect.")

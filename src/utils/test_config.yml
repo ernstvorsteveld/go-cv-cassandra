@@ -1,5 +1,8 @@
 api:
   port: 8091
+  expectedHosts:
+    - localhost:8091
+    - localhost:8092
 db:
   cassandra:
     url: "127.0.0.1"

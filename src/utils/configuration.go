@@ -28,7 +28,8 @@ type CassandraConfiguration struct {
 }
 
 type APIConfiguration struct {
-	Port string
+	Port          string
+	Expectedhosts []string
 }
 
 type SensitiveInfo string

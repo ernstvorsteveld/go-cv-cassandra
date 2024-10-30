@@ -1,5 +1,0 @@
-# yaml-language-server: $../schema=configuration-schema.json
-package: cv
-generate:
-  models: true
-output: ./cv_types.gen.go

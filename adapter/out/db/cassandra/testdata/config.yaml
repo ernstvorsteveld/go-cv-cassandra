@@ -1,0 +1,2 @@
+cluster_name: testcv
+commitlog_directory: /var/lib/cassandra/commitlog

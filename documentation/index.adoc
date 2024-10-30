@@ -19,7 +19,7 @@ https://github.com/golang-standards/project-layout
 
 [source,bash]
 ----
-go generate ./src/api/cv_api.go
+go generate ./api/cv_api.go
 ----
 
 == UML model

@@ -8,7 +8,7 @@ import (
 	"github.com/ernstvorsteveld/go-cv-cassandra/adapter/in/http/cv"
 	"github.com/ernstvorsteveld/go-cv-cassandra/adapter/out/db/cassandra"
 	services "github.com/ernstvorsteveld/go-cv-cassandra/domain/serivces"
-	"github.com/ernstvorsteveld/go-cv-cassandra/utils"
+	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

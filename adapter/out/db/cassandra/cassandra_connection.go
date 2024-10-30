@@ -3,7 +3,7 @@ package cassandra
 import (
 	"strconv"
 
-	"github.com/ernstvorsteveld/go-cv-cassandra/utils"
+	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
 	"github.com/gocql/gocql"
 	log "github.com/sirupsen/logrus"
 )

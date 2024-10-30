@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
 	db "github.com/ernstvorsteveld/go-cv-cassandra/port/out"
-	"github.com/ernstvorsteveld/go-cv-cassandra/utils"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ernstvorsteveld/go-cv-cassandra/utils/mock"
+	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils/mock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )

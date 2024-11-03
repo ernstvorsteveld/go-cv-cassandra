@@ -1,3 +1,4 @@
 -.vscode/
 src/cmd/api/__debug*
 documentation/overview.png
+out

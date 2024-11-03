@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/adapter/out/db/mock"
-	"github.com/ernstvorsteveld/go-cv-cassandra/port/in"
+	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/in"
 	"github.com/stretchr/testify/assert"
 )
 

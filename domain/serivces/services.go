@@ -1,8 +1,8 @@
 package services
 
 import (
-	"github.com/ernstvorsteveld/go-cv-cassandra/port/in"
-	"github.com/ernstvorsteveld/go-cv-cassandra/port/out"
+	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/in"
+	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/out"
 )
 
 type InServices struct {

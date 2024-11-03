@@ -3,8 +3,8 @@ package cassandra
 import (
 	"context"
 
+	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/out"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
-	"github.com/ernstvorsteveld/go-cv-cassandra/port/out"
 	"github.com/gocql/gocql"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"

@@ -6,9 +6,9 @@ import (
 	"log/slog"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/domain/model"
+	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/in"
+	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/out"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
-	"github.com/ernstvorsteveld/go-cv-cassandra/port/in"
-	"github.com/ernstvorsteveld/go-cv-cassandra/port/out"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )

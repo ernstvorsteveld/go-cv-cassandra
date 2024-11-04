@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -67,31 +68,38 @@ func Test_should_publish_to_topic(t *testing.T) {
 	topic := "test.tag.created"
 
 	for i := 0; i < 10; i++ {
-		key := uuid.NewString()
+		key := fmt.Sprintf("key_%d", i)
 		err := kafkaContext.Publish(context.Background(), topic, EventPayload{
 			CorrelationId: uuid.NewString(),
 			EventType:     "test",
 			Key:           key,
 			Payload: model.Tag{
 				Id:   key,
-				Name: uuid.NewString(),
+				Name: fmt.Sprintf("tagname_%d", i),
 			},
 		})
 		assert.Nil(t, err)
 	}
-	log.Printf("number of messages in producer queue %d\n", kafkaContext.p.Len())
 	kafkaContext.p.Flush(15 * 1000)
-	log.Printf("AFTER number of messages in producer queue %d\n", kafkaContext.p.Len())
+	assert.Equal(t, 0, kafkaContext.p.Len(), "Not all messages flushed")
 
 	kafkaContext.c.SubscribeTopics([]string{topic}, nil)
 
-	for {
+	nr := 0
+	others := true
+	for others {
 		msg, err := kafkaContext.c.ReadMessage(100 * time.Millisecond)
 		if err != nil {
 			log.Printf("No message: %v\n", err)
 			continue
 		}
+
+		var event EventPayload
+		json.Unmarshal(msg.Value, &event)
+		assert.Equal(t, fmt.Sprintf("key_%d", nr), event.Key)
 		fmt.Printf("Consumed event from topic %s: key = %-10s value = %s\n",
 			*msg.TopicPartition.Topic, string(msg.Key), string(msg.Value))
+		nr = nr + 1
+		others = nr != 10
 	}
 }

@@ -12,6 +12,7 @@ import (
 type Configuration struct {
 	DB  DBConfiguration
 	Api APIConfiguration
+	EH  EventHandlerConfiguration
 }
 
 type DBConfiguration struct {
@@ -45,6 +46,14 @@ func (s SensitiveInfo) Value() string {
 type ConfigurationManager interface {
 	Read(fname string, ftype string)
 	Print()
+}
+
+type EventHandlerConfiguration struct {
+	Kafka KafkaConfiguration
+}
+
+type KafkaConfiguration struct {
+	BootstrapServers string
 }
 
 func (c *Configuration) Read(fname string, ftype string) {

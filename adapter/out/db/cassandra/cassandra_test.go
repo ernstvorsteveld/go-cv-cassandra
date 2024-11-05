@@ -60,10 +60,11 @@ func TestMain(m *testing.M) {
 }
 
 func Test_should_create_one_experience(t *testing.T) {
+	id := uuid.NewString()
 	name := "value1"
 	tags := []string{"ab", "ac"}
 
-	d, err := eDBPort.Create(context.Background(), db.NewExperienceDto(uuid.NewString(), name, tags))
+	err := eDBPort.Create(context.Background(), db.NewExperienceDto(id, name, tags))
 	if err != nil {
 		log.Printf("failed to start container: %s", err)
 	}
@@ -73,7 +74,7 @@ func Test_should_create_one_experience(t *testing.T) {
 	itr := session.cs.Query(q).Iter()
 	errors := true
 	for itr.MapScan(m) {
-		assert.Equal(t, m["id"].(string), d.GetId())
+		assert.Equal(t, m["id"].(string), id)
 		assert.Equal(t, m["name"].(string), name)
 		assert.Equal(t, m["tags"].([]string), tags)
 		errors = false

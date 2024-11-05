@@ -30,10 +30,10 @@ func NewMockTagDb() *MockTagDb {
 	}
 }
 
-func (m *MockExpDb) Create(ctx context.Context, dto *out.ExperienceDto) (*out.ExperienceDto, error) {
-	d := out.NewExperienceDto(uuid.NewString(), dto.GetName(), dto.GetTags())
+func (m *MockExpDb) Create(ctx context.Context, dto *out.ExperienceDto) error {
+	d := out.NewExperienceDto(dto.GetId(), dto.GetName(), dto.GetTags())
 	m.Items[d.GetId()] = d
-	return d, nil
+	return nil
 }
 
 func (m *MockExpDb) Get(ctx context.Context, id string) (*out.ExperienceDto, error) {

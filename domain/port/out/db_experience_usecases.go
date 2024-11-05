@@ -35,7 +35,7 @@ func NewExperienceDto(id string, name string, tags []string) *ExperienceDto {
 }
 
 type ExperienceDbPort interface {
-	Create(ctx context.Context, dto *ExperienceDto) (*ExperienceDto, error)
+	Create(ctx context.Context, dto *ExperienceDto) error
 	Get(ctx context.Context, id string) (*ExperienceDto, error)
 	GetPage(ctx context.Context, page int32, size int16) ([]ExperienceDto, error)
 	Update(ctx context.Context, id string, dto *ExperienceDto) error

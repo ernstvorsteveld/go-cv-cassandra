@@ -11,11 +11,10 @@ import (
 
 func Test_should_create_experience(t *testing.T) {
 	eDB := mock.NewMockExpDb()
-	tDB := mock.NewMockTagDb()
-	service := NewCvServices(eDB, tDB)
+	service := NewCvServices(eDB, nil)
 
-	e := in.NewCreateExperienceCommand("test-name", []string{"a", "b"})
-	newExp, _ := service.CreateExperience(context.Background(), e)
+	c := in.NewCreateExperienceCommand("test-name", []string{"a", "b"})
+	newExp, _ := service.CreateExperience(context.Background(), c)
 	assert.Equal(t, newExp.Name, "test-name")
 	assert.NotEmpty(t, newExp.Id)
 	assert.Equal(t, len(eDB.Items), 1)

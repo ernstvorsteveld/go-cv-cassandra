@@ -23,7 +23,7 @@ func (c *InServices) ListExperiences(ctx context.Context, command *in.ListExperi
 
 func (c *InServices) CreateExperience(ctx context.Context, command *in.CreateExperienceCommand) (*model.Experience, error) {
 	dto := out.NewExperienceDto(uuid.NewString(), command.Name, command.Tags)
-	dto, err := c.ep.Create(context.Background(), dto)
+	err := c.ep.Create(context.Background(), dto)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}

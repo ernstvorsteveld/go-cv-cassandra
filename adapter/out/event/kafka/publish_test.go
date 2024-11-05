@@ -1,4 +1,4 @@
-package kafka
+package kafka_producer
 
 import (
 	"context"
@@ -8,6 +8,10 @@ import (
 	"testing"
 	"time"
 
+	event_model "github.com/ernstvorsteveld/go-cv-cassandra/adapter/domain/event"
+	adapter_in_event "github.com/ernstvorsteveld/go-cv-cassandra/adapter/in/event"
+	kafka_consumer "github.com/ernstvorsteveld/go-cv-cassandra/adapter/in/event/kafka"
+	adapter_out_event "github.com/ernstvorsteveld/go-cv-cassandra/adapter/out/event"
 	"github.com/ernstvorsteveld/go-cv-cassandra/domain/model"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
 	"github.com/google/uuid"
@@ -18,7 +22,8 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/kafka"
 )
 
-var kafkaContext *KafkaContext
+var producer adapter_out_event.Producer
+var consumer adapter_in_event.Consumer
 
 func TestMain(m *testing.M) {
 	log.Infof("About to start Kafka container in startContainer")
@@ -53,12 +58,10 @@ func TestMain(m *testing.M) {
 			},
 		},
 	}
-	producer := NewKafkaProducer(config)
-	consumer := NewKafkaConsumer(config)
+	producer = NewKafkaProducer(config)
+	consumer = kafka_consumer.NewKafkaConsumer(config)
 	defer producer.Close()
 	defer consumer.Close()
-
-	kafkaContext = NewKafkaContext(producer, consumer)
 
 	m.Run()
 }
@@ -69,7 +72,7 @@ func Test_should_publish_to_topic(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		key := fmt.Sprintf("key_%d", i)
-		err := kafkaContext.Publish(context.Background(), topic, EventPayload{
+		err := producer.Publish(context.Background(), topic, event_model.EventPayload{
 			CorrelationId: uuid.NewString(),
 			EventType:     "test",
 			Key:           key,
@@ -80,21 +83,22 @@ func Test_should_publish_to_topic(t *testing.T) {
 		})
 		assert.Nil(t, err)
 	}
-	kafkaContext.p.Flush(15 * 1000)
-	assert.Equal(t, 0, kafkaContext.p.Len(), "Not all messages flushed")
 
-	kafkaContext.c.SubscribeTopics([]string{topic}, nil)
+	producer.Flush(1500 * 1000)
+	assert.Equal(t, 0, producer.Len(), "Not all messages flushed")
+
+	consumer.SubscribeTopics([]string{topic})
 
 	nr := 0
 	others := true
 	for others {
-		msg, err := kafkaContext.c.ReadMessage(100 * time.Millisecond)
+		msg, err := consumer.ReadMessage(100 * time.Millisecond)
 		if err != nil {
 			log.Printf("No message: %v\n", err)
 			continue
 		}
 
-		var event EventPayload
+		var event event_model.EventPayload
 		json.Unmarshal(msg.Value, &event)
 		assert.Equal(t, fmt.Sprintf("key_%d", nr), event.Key)
 		fmt.Printf("Consumed event from topic %s: key = %-10s value = %s\n",

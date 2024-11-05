@@ -1,16 +1,22 @@
-package kafka
+package kafka_producer
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	model "github.com/ernstvorsteveld/go-cv-cassandra/adapter/domain/event"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
 )
 
-func NewKafkaProducer(config *utils.Configuration) *kafka.Producer {
+type KafkaProducerContext struct {
+	p *kafka.Producer
+}
+
+func NewKafkaProducer(config *utils.Configuration) *KafkaProducerContext {
 	p, err := kafka.NewProducer(&kafka.ConfigMap{
 		"bootstrap.servers": config.EH.Kafka.BootstrapServers,
 		"acks":              "all",
@@ -33,42 +39,12 @@ func NewKafkaProducer(config *utils.Configuration) *kafka.Producer {
 			}
 		}
 	}()
-	return p
-}
-
-func NewKafkaConsumer(config *utils.Configuration) *kafka.Consumer {
-	c, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": config.EH.Kafka.BootstrapServers,
-		"group.id":          "test",
-		"auto.offset.reset": "earliest",
-	})
-	if err != nil {
-		fmt.Printf("Failed to create consumer: %s", err)
-		os.Exit(1)
-	}
-	return c
-}
-
-type EventPayload struct {
-	CorrelationId string      `json:"correlationId"`
-	EventType     string      `json:"type"`
-	Key           string      `json:"key"`
-	Payload       interface{} `json:"payload"`
-}
-
-type KafkaContext struct {
-	p *kafka.Producer
-	c *kafka.Consumer
-}
-
-func NewKafkaContext(p *kafka.Producer, c *kafka.Consumer) *KafkaContext {
-	return &KafkaContext{
+	return &KafkaProducerContext{
 		p: p,
-		c: c,
 	}
 }
 
-func (k *KafkaContext) Publish(ctx context.Context, eventType string, event EventPayload) error {
+func (k *KafkaProducerContext) Publish(ctx context.Context, eventType string, event model.EventPayload) error {
 	value, err := json.Marshal(event)
 	if err != nil {
 		return err
@@ -81,4 +57,17 @@ func (k *KafkaContext) Publish(ctx context.Context, eventType string, event Even
 	}, nil)
 
 	return err
+}
+
+func (k *KafkaProducerContext) Close() error {
+	k.p.Close()
+	return nil
+}
+
+func (k *KafkaProducerContext) Flush(duration time.Duration) int {
+	return k.p.Flush(int(duration.Microseconds()))
+}
+
+func (k *KafkaProducerContext) Len() int {
+	return k.p.Len()
 }

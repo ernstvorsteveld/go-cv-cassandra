@@ -49,7 +49,7 @@ func (cc *CassandraExperienceSession) Get(ctx context.Context, id string) (*out.
 	return e, nil
 }
 
-const stmt_update string = "UPDATE experiences SET name = ?, tags = ? WHERE id = ?"
+const stmt_update string = "UPDATE cv_experiences SET name = ?, tags = ? WHERE id = ?"
 
 func (cc *CassandraExperienceSession) Update(ctx context.Context, id string, dto *out.ExperienceDto) error {
 	log.Debugf("About to Update Experience with id %s with value %v", id, dto)

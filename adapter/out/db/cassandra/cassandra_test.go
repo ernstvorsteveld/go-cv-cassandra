@@ -69,7 +69,7 @@ func Test_should_create_one_experience(t *testing.T) {
 	}
 
 	m := map[string]interface{}{}
-	q := `SELECT * from testcv.experiences;`
+	q := `SELECT * from testcv.cv_experiences;`
 	itr := session.cs.Query(q).Iter()
 	errors := true
 	for itr.MapScan(m) {
@@ -83,7 +83,7 @@ func Test_should_create_one_experience(t *testing.T) {
 }
 
 func insertOne() (string, string, []string) {
-	q := `INSERT INTO testcv.experiences(id, name, tags) VALUES (?, ?, ?)`
+	q := `INSERT INTO testcv.cv_experiences(id, name, tags) VALUES (?, ?, ?)`
 
 	id := uuid.New().String()
 	name := "value1"
@@ -115,7 +115,7 @@ func Test_should_update_one_experience(t *testing.T) {
 		log.Errorf("error while updating %v", err)
 	}
 
-	const q = "SELECT id, name, tags from testcv.experiences WHERE id = ?"
+	const q = "SELECT id, name, tags from testcv.cv_experiences WHERE id = ?"
 	m := map[string]interface{}{}
 	itr := session.cs.Query(q, id).Iter()
 	errors := true

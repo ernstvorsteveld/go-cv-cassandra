@@ -22,8 +22,8 @@ func NewExperiencePort(c *utils.Configuration, s *Session) out.ExperienceDbPort 
 	}
 }
 
-const stmt_insert string = "INSERT INTO experiences(id,name,tags) VALUES(?,?,?)"
-const stmt_select_by_id string = "SELECT id, name, tags FROM experiences WHERE id = ?"
+const stmt_insert string = "INSERT INTO cv_experiences(id,name,tags) VALUES(?,?,?)"
+const stmt_select_by_id string = "SELECT id, name, tags FROM cv_experiences WHERE id = ?"
 
 var QryErrorNotFound = errors.Errorf("Not Found")
 

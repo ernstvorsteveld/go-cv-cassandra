@@ -4,6 +4,4 @@ type ServerInterface interface {
 // ({{.Method}} {{.Path}})
 {{.OperationId}}(c *gin.Context{{genParamArgs .PathParams}}{{if .RequiresParamObject}}, params {{.OperationId}}Params{{end}})
 {{end}}
-
-	Metrics(c *gin.Context)
 }

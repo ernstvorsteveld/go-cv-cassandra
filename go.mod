@@ -16,6 +16,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.34.0
 	github.com/testcontainers/testcontainers-go/modules/cassandra v0.33.0
 	github.com/testcontainers/testcontainers-go/modules/kafka v0.34.0
+	golang.org/x/sync v0.8.0
 )
 
 require (

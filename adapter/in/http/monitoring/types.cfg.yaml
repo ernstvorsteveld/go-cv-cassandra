@@ -1,0 +1,5 @@
+# yaml-language-server: $../schema=configuration-schema.json
+package: monitoring
+generate:
+  models: true
+output: ./monitoring_types.gen.go

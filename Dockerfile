@@ -3,6 +3,7 @@ WORKDIR /go/src
 ADD . .
 ENV CGO_ENABLED=0
 RUN go generate /go/src/adapter/in/http/cv/cv_api_generator.go
+RUN go generate /go/src/adapter/in/http/monitoring/monitoring_api_generator.go
 RUN go build -o /go/src/cmd ./...
 # RUN go test /go/src/...
 

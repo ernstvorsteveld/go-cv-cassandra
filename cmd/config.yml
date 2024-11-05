@@ -1,8 +1,11 @@
 debugLevel: DEBUG
 api:
-  port: 8091
-  expectedHosts:
-    - localhost:8091
+  cv:
+    port: 8091
+    expectedHosts:
+      - localhost:8091
+  monitoring:
+    port: 8092
 db:
   cassandra:
     url: "127.0.0.1"

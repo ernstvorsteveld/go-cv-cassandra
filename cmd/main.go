@@ -6,10 +6,12 @@ import (
 	"os"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/adapter/in/http/cv"
+	"github.com/ernstvorsteveld/go-cv-cassandra/adapter/in/http/monitoring"
 	"github.com/ernstvorsteveld/go-cv-cassandra/adapter/out/db/cassandra"
 	services "github.com/ernstvorsteveld/go-cv-cassandra/domain/serivces"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -21,6 +23,9 @@ var (
 		[]string{"url"},
 	)
 	c *utils.Configuration
+)
+var (
+	g errgroup.Group
 )
 
 func getDebugLevel(c *utils.Configuration) slog.Level {
@@ -44,12 +49,23 @@ func init() {
 }
 
 func main() {
-
 	session := cassandra.NewCassandraSession(c)
 	ep := cassandra.NewExperiencePort(c, session)
 	tp := cassandra.NewTagPort(c, session)
 	h := services.NewCvServices(ep, tp)
-	server := cv.NewGinCvServer(cv.NewCvApiService(h, c), c)
+	apiServer := cv.NewGinCvServer(cv.NewCvApiService(h, c), c)
 
-	log.Fatal(server.ListenAndServe())
+	monitoringServer := monitoring.NewGinMonitoringServer(monitoring.NewMonitoringApiService(c), c)
+
+	g.Go(func() error {
+		return monitoringServer.ListenAndServe()
+	})
+	slog.Debug("main", "content", "Start Cv API")
+	g.Go(func() error {
+		return apiServer.ListenAndServe()
+	})
+
+	if err := g.Wait(); err != nil {
+		log.Fatal(err)
+	}
 }

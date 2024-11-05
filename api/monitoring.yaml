@@ -1,0 +1,32 @@
+openapi: "3.0.0"
+info:
+  version: "1.0.0"
+  title: Curriculum Vitae Monitoring API
+  description: MonitoringAPI for Curriculum Vitae
+  license:
+    name: MIT
+tags:
+  - name: Metrics
+servers:
+  - url: "http://api.cvapp.com/v1"
+paths:
+  /metrics:
+    get:
+      summary: Metrics
+      description: Returns all metrics
+      operationId: Metrics
+      tags:
+        - Metrics
+      responses:
+        "200":
+          description: Metrics for Prometheus
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricsResponse"
+components:
+  schemas:
+    MetricsResponse:
+      description: Metrics for Prometheus response
+      example: "Unknown"
+      type: string

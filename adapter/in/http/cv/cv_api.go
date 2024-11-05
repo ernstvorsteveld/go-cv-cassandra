@@ -15,7 +15,6 @@ import (
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	middleware "github.com/oapi-codegen/gin-middleware"
 )
@@ -26,9 +25,6 @@ var expecectedHosts StringArray
 const expectedHost = "localhost:8091"
 const CORRELATION_ID_HEADER = "X-CORRELATION-ID"
 const LOCATION_HEADER = "Location"
-
-type CvApiServices interface {
-}
 
 type CvApiHandler struct {
 	u in.UseCasesPort
@@ -106,14 +102,9 @@ func (cs *CvApiHandler) ListTags(c *gin.Context) {
 	c.JSON(http.StatusOK, tags)
 }
 
-func (cs *CvApiHandler) Metrics(c *gin.Context) {
-	slog.Debug("Metrics", "content", "About to GET Metrics.")
-	promhttp.Handler().ServeHTTP(c.Writer, c.Request)
-}
-
 func NewGinCvServer(h *CvApiHandler, c *utils.Configuration) *http.Server {
-	slog.Debug("NewGinCvServer", "content", "About to create GinCVServer")
-	expecectedHosts = c.Api.Expectedhosts
+	slog.Debug("NewGinCvServer", "content", "About to create GinCVServer", "port", c.Api.CV.Port)
+	expecectedHosts = c.Api.CV.Expectedhosts
 	swagger, err := GetSwagger()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading swagger spec\n: %s", err)
@@ -137,7 +128,7 @@ func NewGinCvServer(h *CvApiHandler, c *utils.Configuration) *http.Server {
 
 	s := &http.Server{
 		Handler: r,
-		Addr:    net.JoinHostPort("0.0.0.0", c.Api.Port),
+		Addr:    net.JoinHostPort("0.0.0.0", c.Api.CV.Port),
 	}
 	return s
 }

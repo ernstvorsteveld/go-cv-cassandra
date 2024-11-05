@@ -1,6 +1,6 @@
 # yaml-language-server: $../schema=configuration-schema.json
-package: cv
+package: monitoring
 generate:
   gin-server: true
   embedded-spec: true
-output: ./cv_server.gen.go
+output: ./monitoring_server.gen.go

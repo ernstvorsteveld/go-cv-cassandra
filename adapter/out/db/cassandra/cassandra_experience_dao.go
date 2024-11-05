@@ -57,10 +57,7 @@ func (cc *CassandraExperienceSession) Get(ctx context.Context, id string) (*out.
 
 func (cc *CassandraExperienceSession) Update(ctx context.Context, id string, dto *out.ExperienceDto) error {
 	log.Debugf("About to Update Experience with id %s with value %v", id, dto)
-	if err := cc.cs.Query(stmt_update, dto.GetName(), dto.GetTags(), id).Exec(); err != nil {
-		return err
-	}
-	return nil
+	return cc.cs.Query(stmt_update, dto.GetName(), dto.GetTags(), id).Exec()
 }
 
 func (cc *CassandraExperienceSession) GetPage(ctx context.Context, page int32, size int16) ([]out.ExperienceDto, error) {

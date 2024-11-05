@@ -20,10 +20,23 @@ var (
 		},
 		[]string{"url"},
 	)
+	c *utils.Configuration
 )
 
+func getDebugLevel(c *utils.Configuration) slog.Level {
+	switch c.DebugLevel {
+	case "DEBUG":
+		return slog.LevelDebug
+	}
+	return slog.LevelInfo
+}
+
 func init() {
-	logger := slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	c = &utils.Configuration{}
+	c.Read("config", "yml")
+	c.Print()
+
+	logger := slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: getDebugLevel(c)}))
 	slog.SetDefault(logger)
 
 	slog.Info("Register Handler for Prometheus")
@@ -31,9 +44,6 @@ func init() {
 }
 
 func main() {
-	c := &utils.Configuration{}
-	c.Read("config", "yml")
-	c.Print()
 
 	session := cassandra.NewCassandraSession(c)
 	ep := cassandra.NewExperiencePort(c, session)

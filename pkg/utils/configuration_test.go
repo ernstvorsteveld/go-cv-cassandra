@@ -10,6 +10,7 @@ func Test_should_read_configuration(t *testing.T) {
 	c := Configuration{}
 	c.Read("test_config", "yml")
 
+	assert.Equal(t, "DEBUG", c.DebugLevel, "Debug level incorrect, not DEBUG.")
 	assert.Equal(t, "8091", c.Api.Port, "The Api Ports incorrect.")
 	assert.Equal(t, []string{"localhost:8091", "localhost:8092"}, c.Api.Expectedhosts, "The Api Expectehosts incorrect.")
 

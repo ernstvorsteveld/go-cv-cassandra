@@ -10,9 +10,10 @@ import (
 )
 
 type Configuration struct {
-	DB  DBConfiguration
-	Api APIConfiguration
-	EH  EventHandlerConfiguration
+	DebugLevel string
+	DB         DBConfiguration
+	Api        APIConfiguration
+	EH         EventHandlerConfiguration
 }
 
 type DBConfiguration struct {

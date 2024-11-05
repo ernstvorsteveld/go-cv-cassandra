@@ -37,7 +37,6 @@ var QryErrorNotFound = errors.Errorf("Not Found")
 
 func (cc *CassandraExperienceSession) Create(ctx context.Context, dto *out.ExperienceDto) (*out.ExperienceDto, error) {
 	log.Debugf("About to Create Experience %v", dto)
-	dto = out.NewExperienceDto(dto.GetId(), dto.GetName(), dto.GetTags())
 	if err := cc.cs.Query(stmt_insert, dto.GetId(), dto.GetName(), dto.GetTags()).Exec(); err != nil {
 		return nil, err
 	}

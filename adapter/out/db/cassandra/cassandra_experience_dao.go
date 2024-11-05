@@ -2,6 +2,7 @@ package cassandra
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/out"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
@@ -22,8 +23,15 @@ func NewExperiencePort(c *utils.Configuration, s *Session) out.ExperienceDbPort 
 	}
 }
 
-const stmt_insert string = "INSERT INTO cv_experiences(id,name,tags) VALUES(?,?,?)"
-const stmt_select_by_id string = "SELECT id, name, tags FROM cv_experiences WHERE id = ?"
+const (
+	EXP_TABLE_NAME = "cv_experiences"
+)
+
+var (
+	stmt_insert       string = fmt.Sprintf("INSERT INTO %s (id, name, tags) VALUES (?, ?, ?)", EXP_TABLE_NAME)
+	stmt_select_by_id string = fmt.Sprintf("SELECT id, name, tags FROM %s WHERE id = ?", EXP_TABLE_NAME)
+	stmt_update       string = fmt.Sprintf("UPDATE %s SET name = ?, tags = ? WHERE id = ?", EXP_TABLE_NAME)
+)
 
 var QryErrorNotFound = errors.Errorf("Not Found")
 
@@ -33,7 +41,6 @@ func (cc *CassandraExperienceSession) Create(ctx context.Context, dto *out.Exper
 	if err := cc.cs.Query(stmt_insert, dto.GetId(), dto.GetName(), dto.GetTags()).Exec(); err != nil {
 		return nil, err
 	}
-
 	return dto, nil
 }
 
@@ -48,8 +55,6 @@ func (cc *CassandraExperienceSession) Get(ctx context.Context, id string) (*out.
 	e := out.NewExperienceDto(_id, name, tags)
 	return e, nil
 }
-
-const stmt_update string = "UPDATE cv_experiences SET name = ?, tags = ? WHERE id = ?"
 
 func (cc *CassandraExperienceSession) Update(ctx context.Context, id string, dto *out.ExperienceDto) error {
 	log.Debugf("About to Update Experience with id %s with value %v", id, dto)

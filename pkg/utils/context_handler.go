@@ -42,15 +42,15 @@ func (w *ContextWrapper) AddParentCorrelationId() *ContextWrapper {
 	return w
 }
 
-func GetCorrelationUuid(c *context.Context) uuid.UUID {
+func GetCorrelationUuid(c context.Context) uuid.UUID {
 	return uuid.MustParse(get(CORRELATION_ID, c).(string))
 }
 
-func GetCorrelationId(c *context.Context) string {
+func GetCorrelationId(c context.Context) string {
 	return get(CORRELATION_ID, c).(string)
 }
 
-func GetParentCorrelationId(c *context.Context) string {
+func GetParentCorrelationId(c context.Context) string {
 	return get(PARENT_CORRELATION_ID, c).(string)
 }
 
@@ -67,8 +67,8 @@ func (w *ContextWrapper) Build() *context.Context {
 	return &w.c
 }
 
-func get(k string, c *context.Context) any {
-	v := (*c).Value(k)
+func get(k string, c context.Context) any {
+	v := c.Value(k)
 	if v == nil {
 		return "UNKNOWN"
 	}

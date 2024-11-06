@@ -5,3 +5,4 @@ documentation/overview.png
 .DS_Store
 docker/out
 docker/opensearch-data1/
+.env

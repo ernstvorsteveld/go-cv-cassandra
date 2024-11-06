@@ -3,6 +3,8 @@ package utils
 import (
 	"context"
 	"log/slog"
+
+	"github.com/google/uuid"
 )
 
 const CORRELATION_ID_HEADER = "X-CORRELATION-ID"
@@ -40,12 +42,16 @@ func (w *ContextWrapper) AddParentCorrelationId() *ContextWrapper {
 	return w
 }
 
-func GetCorrelationId(c context.Context) string {
-	return c.Value(CORRELATION_ID).(string)
+func GetCorrelationUuid(c *context.Context) uuid.UUID {
+	return uuid.MustParse(get(CORRELATION_ID, c).(string))
 }
 
-func GetParentCorrelationId(c context.Context) string {
-	return c.Value(PARENT_CORRELATION_ID).(string)
+func GetCorrelationId(c *context.Context) string {
+	return get(CORRELATION_ID, c).(string)
+}
+
+func GetParentCorrelationId(c *context.Context) string {
+	return get(PARENT_CORRELATION_ID, c).(string)
 }
 
 func add(m map[string]any, k string, v any) map[string]any {
@@ -53,16 +59,16 @@ func add(m map[string]any, k string, v any) map[string]any {
 	return m
 }
 
-func (w *ContextWrapper) Build() context.Context {
+func (w *ContextWrapper) Build() *context.Context {
 	slog.Debug("Build", "content", "About to build context", "attributes", w.m)
 	for k, v := range w.m {
 		w.c = context.WithValue(w.c, k, v)
 	}
-	return w.c
+	return &w.c
 }
 
-func Get(k string, c context.Context) any {
-	v := c.Value(k)
+func get(k string, c *context.Context) any {
+	v := (*c).Value(k)
 	if v == nil {
 		return "UNKNOWN"
 	}

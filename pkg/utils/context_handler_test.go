@@ -17,5 +17,6 @@ func Test_should_correlation_id(t *testing.T) {
 	ctx := w.Build()
 
 	assert.Equal(t, uuid.String(), GetCorrelationId(ctx), "The CorrelationId is incorrect.")
+	assert.Equal(t, uuid, GetCorrelationUuid(ctx), "The CorrelationId is incorrect.")
 	assert.Equal(t, uuid.String(), GetParentCorrelationId(ctx), "The ParentCorrelationId is incorrect.")
 }

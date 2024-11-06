@@ -130,6 +130,14 @@ func (cs *CvApiHandler) ListTags(c *gin.Context) {
 	c.JSON(http.StatusOK, tags)
 }
 
+// Create a tag
+// (POST /tags)
+func (cs *CvApiHandler) CreateTag(c *gin.Context) {
+	slog.Debug("cv.CreateTag", "content", "About to create Tag")
+	// ctx := utils.NewDefaultContextWrapper(c, Get(CORRELATION_ID_HEADER, c).(string)).Build()
+	c.JSON(http.StatusOK, nil)
+}
+
 func NewGinCvServer(h *CvApiHandler, c *utils.Configuration) *http.Server {
 	slog.Debug("NewGinCvServer", "content", "About to create GinCVServer", "port", c.Api.CV.Port)
 	expecectedHosts = c.Api.CV.Expectedhosts

@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -13,6 +14,7 @@ type Experience struct {
 }
 
 func NewExperience(id string, name string, tags []string) (*Experience, error) {
+	slog.Debug("model.NewExperience", "content", "About to construct Experience", "id", id, "name", name, "tags", tags)
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	e := &Experience{Id: id, Name: name, Tags: tags}

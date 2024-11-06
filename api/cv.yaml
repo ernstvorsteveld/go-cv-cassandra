@@ -226,6 +226,68 @@ paths:
                 }
               schema:
                 $ref: "#/components/schemas/Error"
+    post:
+      tags:
+        - Tags
+      summary: Create a tag
+      description: Create a new tag
+      operationId: createTag
+      requestBody:
+        description: Tag to create
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Tag"
+      responses:
+        201:
+          description: Tag created
+          headers:
+            X-OBJECT-ID:
+              example: "12345678-1234-1234-1234-1234567890ab"
+              description: ObjectIO of the create tag
+              schema:
+                type: string
+            X-CORRELATION-ID:
+              example: "12345678-1234-1234-1234-1234567890ab"
+              description: Id of the correlation of the create tag request
+              schema:
+                type: string
+            Content-Location:
+              example: "http://api.cvapp.com/v1/tags/12345678-1234-1234-1234-1234567890ab"
+              description: Link to the created tag
+              schema:
+                type: string
+        default:
+          description: When create of a tag fails
+          headers:
+            X-CORRELATION-ID:
+              example: 12345678-1234-1234-1234-1234567890ab
+              description: Id of the correlation of the create tag request error
+              schema:
+                type: string
+          content:
+            application/json:
+              example:
+                {
+                  "requestId": "12345678-1234-1234-1234-1234567890ab",
+                  "code": "TAG000003",
+                  "message": "Create Tag failed",
+                }
+              schema:
+                $ref: "#/components/schemas/Error"
+        400:
+          description: Bad request
+          content:
+            application/json:
+              example:
+                {
+                  "requestId": "12345678-1234-1234-1234-1234567890ab",
+                  "code": "TAG000001",
+                  "message": "Could not create tag",
+                }
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   schemas:
     ObjectId:

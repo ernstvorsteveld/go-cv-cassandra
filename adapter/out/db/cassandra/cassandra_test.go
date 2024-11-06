@@ -128,3 +128,8 @@ func Test_should_update_one_experience(t *testing.T) {
 	}
 	assert.False(t, errors)
 }
+
+func Test_should_not_find_experience_by_id(t *testing.T) {
+	_, err := eDBPort.Get(context.Background(), "not-existing-id")
+	assert.Equal(t, "not found", err.Error())
+}

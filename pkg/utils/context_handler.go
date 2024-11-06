@@ -17,27 +17,27 @@ type ContextWrapper struct {
 	m map[string]any
 }
 
-func NewDefaultContextWrapper(pc context.Context, correlationId string) *ContextWrapper {
+func NewDefaultContextWrapper(pc context.Context, correlationId string) ContextWrapper {
 	w := ContextWrapper{
 		g: NewDefaultUuidGenerator(),
 		c: pc,
 		m: make(map[string]any),
 	}
 	w.m[CORRELATION_ID] = correlationId
-	return &w
+	return w
 }
 
-func NewContextWrapper(pc context.Context, ig IdGenerator) *ContextWrapper {
+func NewContextWrapper(pc context.Context, ig IdGenerator) ContextWrapper {
 	w := ContextWrapper{
 		g: ig,
 		c: pc,
 		m: make(map[string]any),
 	}
 	w.m[CORRELATION_ID] = ig.UUIDString()
-	return &w
+	return w
 }
 
-func (w *ContextWrapper) AddParentCorrelationId() *ContextWrapper {
+func (w ContextWrapper) AddParentCorrelationId() ContextWrapper {
 	w.m = add(w.m, PARENT_CORRELATION_ID, w.g.UUIDString())
 	return w
 }
@@ -59,12 +59,12 @@ func add(m map[string]any, k string, v any) map[string]any {
 	return m
 }
 
-func (w *ContextWrapper) Build() *context.Context {
+func (w ContextWrapper) Build() context.Context {
 	slog.Debug("Build", "content", "About to build context", "attributes", w.m)
 	for k, v := range w.m {
 		w.c = context.WithValue(w.c, k, v)
 	}
-	return &w.c
+	return w.c
 }
 
 func get(k string, c context.Context) any {

@@ -14,7 +14,6 @@ import (
 	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/in"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 
 	middleware "github.com/oapi-codegen/gin-middleware"
 )
@@ -24,6 +23,7 @@ var expecectedHosts StringArray
 
 const expectedHost = "localhost:8091"
 const CORRELATION_ID_HEADER = "X-CORRELATION-ID"
+const OBJECT_ID_HEADER = "X-OBJECT-ID"
 const LOCATION_HEADER = "Location"
 
 type CvApiHandler struct {
@@ -38,18 +38,27 @@ func NewCvApiService(u in.UseCasesPort, c *utils.Configuration) *CvApiHandler {
 	}
 }
 
+func newError(ctx context.Context, code string) *Error {
+	return &Error{
+		Code:      code,
+		Message:   experienceErrors[code],
+		RequestId: utils.GetCorrelationUuid(ctx),
+	}
+}
+
 func (cs *CvApiHandler) ListExperiences(c *gin.Context, params ListExperiencesParams) {
 	slog.Debug("cv.ListExperiences", "content", "About to List Experiences", "correlationId", Get(CORRELATION_ID_HEADER, c))
 	ctx := utils.NewDefaultContextWrapper(c, Get(CORRELATION_ID_HEADER, c).(string)).Build()
 	es, err := cs.u.ListExperiences(ctx, in.NewListExperienceCommand(int(*params.Page), int(*params.Limit)))
-	if err == nil {
-		e := Error{Code: "EXP0000002", Message: "Error while retrieving experiences.", RequestId: uuid.New()}
-		c.JSON(http.StatusInternalServerError, e)
+	if err != nil {
+		slog.Debug("cv.ListExperiences", "content", "Error while retrieving Experiences", "correlationId", Get(CORRELATION_ID_HEADER, c), "error-code", "EXP0000001", "error", err.Error())
+		c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000001"))
+		return
 	}
 	_, err = json.Marshal(es)
 	if err != nil {
-		e := Error{Code: "EXP0000003", Message: "Error while marshalling experiences.", RequestId: uuid.New()}
-		c.JSON(http.StatusInternalServerError, e)
+		slog.Debug("cv.ListExperiences", "content", "Error while retrieving Experiences", "correlationId", Get(CORRELATION_ID_HEADER, c), "error-code", "EXP0000002", "error", err.Error())
+		c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000002"))
 		return
 	}
 
@@ -60,19 +69,22 @@ func (cs *CvApiHandler) ListExperiences(c *gin.Context, params ListExperiencesPa
 // (POST /experiences)
 func (cs *CvApiHandler) CreateExperience(c *gin.Context) {
 	slog.Debug("cv.CreateExperience", "content", "About to Create an Experience", "correlationId", Get(CORRELATION_ID_HEADER, c))
+	ctx := utils.NewDefaultContextWrapper(c, Get(CORRELATION_ID_HEADER, c).(string)).Build()
+
 	var e model.Experience
 	if err := c.ShouldBindJSON(&e); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		slog.Debug("cv.CreateExperience", "content", "Error while creating Experience", "correlationId", Get(CORRELATION_ID_HEADER, c), "error-code", "EXP0000003", "error", err.Error())
+		c.JSON(http.StatusBadRequest, newError(ctx, "EXP0000003"))
 		return
 	}
-	ctx := utils.NewDefaultContextWrapper(c, Get(CORRELATION_ID_HEADER, c).(string)).Build()
 	m, err := cs.u.CreateExperience(ctx, in.NewCreateExperienceCommand(e.GetName(), e.GetTags()))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		slog.Debug("cv.CreateExperience", "content", "Error while creating Experience", "correlationId", Get(CORRELATION_ID_HEADER, c), "error-code", "EXP0000004", "error", err.Error())
+		c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000004"))
 		return
 	}
-	location := fmt.Sprintf("http://localhost:8091/experiences/%s", m.Id)
-	c.Writer.Header().Set(LOCATION_HEADER, location)
+	c.Writer.Header().Set(LOCATION_HEADER, fmt.Sprintf("http://localhost:8091/experiences/%s", m.Id))
+	c.Writer.Header().Set(OBJECT_ID_HEADER, m.Id)
 	c.JSON(http.StatusCreated, m.Id)
 }
 
@@ -85,20 +97,36 @@ func (cs *CvApiHandler) GetExperienceById(c *gin.Context, id string) {
 	if err == nil {
 		_, err := json.Marshal(e)
 		if err != nil {
-			c.JSON(400, nil)
+			slog.Debug("cv.GetExperienceById", "content", "Error while retrieving Experience by Id", "correlationId", Get(CORRELATION_ID_HEADER, c), "error-code", "EXP0000005", "error", err.Error())
+			c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000005"))
 			return
 		}
-
 		c.JSON(http.StatusOK, e)
-
 	} else {
-		c.Request.Response.StatusCode = 400
+		if isNotFound(err) {
+			slog.Debug("cv.GetExperienceById", "content", "Error while retrieving Experience by Id", "correlationId", Get(CORRELATION_ID_HEADER, c), "error-code", "EXP0000006", "error", err.Error())
+			c.JSON(http.StatusNotFound, newError(ctx, "EXP0000006"))
+			return
+		} else {
+			c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000007"))
+			return
+		}
 	}
+}
+
+func isNotFound(err error) bool {
+	return err != nil && err.Error() == "not found"
 }
 
 func (cs *CvApiHandler) ListTags(c *gin.Context) {
 	slog.Debug("cv.ListTags", "content", "About to List Tags, using defaults page=0 and size=100")
-	tags, _ := cs.u.ListTags(context.Background(), in.NewListTagsCommand(int(0), int(100)))
+	ctx := utils.NewDefaultContextWrapper(c, Get(CORRELATION_ID_HEADER, c).(string)).Build()
+	tags, err := cs.u.ListTags(context.Background(), in.NewListTagsCommand(int(0), int(100)))
+	if err != nil {
+		slog.Debug("cv.ListTags", "content", "Error while retrieving Tags", "correlationId", Get(CORRELATION_ID_HEADER, c), "error-code", "TAG0000001", "error", err.Error())
+		c.JSON(http.StatusInternalServerError, newError(ctx, "TAG0000001"))
+		return
+	}
 	c.JSON(http.StatusOK, tags)
 }
 
@@ -179,4 +207,15 @@ func (v StringArray) contains(s string) bool {
 		}
 	}
 	return false
+}
+
+var experienceErrors = map[string]string{
+	"EXP0000001": "error while retrieving experiences",
+	"EXP0000002": "error while marshalling experiences",
+	"EXP0000003": "error while marshalling input payload",
+	"EXP0000004": "Internal Server error: error while creating experience",
+	"EXP0000005": "Internal Server error: error while marshalling experience",
+	"EXP0000006": "Experience with the provided id does not exist",
+	"EXP0000007": "Other error wjile retrieving experience",
+	"TAG0000001": "Error while retrieving tags",
 }

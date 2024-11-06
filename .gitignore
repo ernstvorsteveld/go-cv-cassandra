@@ -3,3 +3,5 @@ src/cmd/api/__debug*
 documentation/overview.png
 /out
 .DS_Store
+docker/out
+docker/opensearch-data1/

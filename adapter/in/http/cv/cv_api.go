@@ -18,9 +18,8 @@ import (
 )
 
 var idGenerator = utils.NewDefaultUuidGenerator()
-var expecectedHosts StringArray
+var expectedHosts StringArray
 
-const expectedHost = "localhost:8091"
 const CORRELATION_ID_HEADER = "X-CORRELATION-ID"
 const OBJECT_ID_HEADER = "X-OBJECT-ID"
 const LOCATION_HEADER = "Location"
@@ -72,13 +71,13 @@ func (cs *CvApiHandler) CreateExperience(c *gin.Context) {
 
 	var e CreateExperienceRequest
 	if err := c.ShouldBindJSON(&e); err != nil {
-		slog.Debug("cv.CreateExperience", "content", "Error while creating Experience", "correlationId", Get(CORRELATION_ID_HEADER, c), "error-code", "EXP0000003", "error", err.Error())
+		slog.Debug("cv.CreateExperience", "content", "Error while creating Experience", "correlationId", utils.GetCorrelationId(ctx), "error-code", "EXP0000003", "error", err.Error())
 		c.JSON(http.StatusBadRequest, newError(ctx, "EXP0000003"))
 		return
 	}
 	m, err := cs.u.CreateExperience(ctx, in.NewCreateExperienceCommand(e.Name, e.Tags))
 	if err != nil {
-		slog.Debug("cv.CreateExperience", "content", "Error while creating Experience", "correlationId", Get(CORRELATION_ID_HEADER, c), "error-code", "EXP0000004", "error", err.Error())
+		slog.Debug("cv.CreateExperience", "content", "Error while creating Experience", "correlationId", utils.GetCorrelationId(c), "error-code", "EXP0000004", "error", err.Error())
 		c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000004"))
 		return
 	}
@@ -155,7 +154,7 @@ func (cs *CvApiHandler) CreateTag(c *gin.Context) {
 
 func NewGinCvServer(h *CvApiHandler, c *utils.Configuration) *http.Server {
 	slog.Debug("NewGinCvServer", "content", "About to create GinCVServer", "port", c.Api.CV.Port)
-	expecectedHosts = c.Api.CV.Expectedhosts
+	expectedHosts = c.Api.CV.Expectedhosts
 	swagger, err := GetSwagger()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading swagger spec\n: %s", err)
@@ -169,7 +168,7 @@ func NewGinCvServer(h *CvApiHandler, c *utils.Configuration) *http.Server {
 	// This is how you set up a basic gin router
 	r := gin.Default()
 
-	r.Use(CorrelationId, Authenticate, SecurityHeaders)
+	r.Use(CorrelationId, Authenticate, ValidHostHeaders, SecurityHeaders)
 
 	// Use our validation middleware to check all requests against the
 	// OpenAPI schema.
@@ -184,6 +183,13 @@ func NewGinCvServer(h *CvApiHandler, c *utils.Configuration) *http.Server {
 	return s
 }
 
+func MockCorrelationId(c *gin.Context) {
+	correlationId := "05f4ae90-b8c9-4673-ab46-1f726e57932f"
+	slog.Debug("cv.MockCorrelationId", "content", "About to add correlationId", "correlationId", correlationId)
+	c.Header(CORRELATION_ID_HEADER, correlationId)
+	c.Next()
+}
+
 func CorrelationId(c *gin.Context) {
 	correlationId := idGenerator.UUIDString()
 	slog.Debug("cv.CorrelationId", "content", "About to add correlationId", "correlationId", correlationId)
@@ -196,12 +202,16 @@ func Authenticate(c *gin.Context) {
 	c.Next()
 }
 
-func SecurityHeaders(c *gin.Context) {
-	slog.Debug("cv.SecurityHeaders", "content", "About to add security headers", "correlationId", Get(CORRELATION_ID_HEADER, c))
-	if !expecectedHosts.contains(c.Request.Host) {
+func ValidHostHeaders(c *gin.Context) {
+	slog.Debug("cv.HostHeaders", "content", "About to add security headers", "correlationId", Get(CORRELATION_ID_HEADER, c))
+	if !expectedHosts.contains(c.Request.Host) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid host header"})
 		return
 	}
+}
+
+func SecurityHeaders(c *gin.Context) {
+	slog.Debug("cv.SecurityHeaders", "content", "About to add security headers", "correlationId", Get(CORRELATION_ID_HEADER, c))
 	c.Header("X-Frame-Options", "DENY")
 	c.Header("X-XSS-Protection", "1; mode=block")
 	c.Header("X-Content-Type-Options", "nosniff")

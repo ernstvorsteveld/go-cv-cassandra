@@ -3,7 +3,7 @@ package cv
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -37,7 +37,6 @@ func (m *MockExperienceDbPort) Update(ctx context.Context, id string, dto *out.E
 }
 
 func (m *MockExperienceDbPort) Create(ctx context.Context, dto *out.ExperienceDto) error {
-	slog.Info("Mock Create called with ctx %d and dto %w", ctx, dto)
 	args := m.Called(ctx, dto)
 	return args.Error(0)
 }
@@ -71,33 +70,82 @@ func (m *MockTagDbPort) Delete(ctx context.Context, id string) (*out.TagDto, err
 	return nil, nil
 }
 
-func Test_should_create_experince(t *testing.T) {
-	c := &utils.Configuration{}
+var (
+	c              *utils.Configuration
+	ep             *MockExperienceDbPort
+	handler        *CvApiHandler
+	uid            uuid.UUID
+	r              *gin.Engine
+	experienceJson []byte
+)
+
+func readConfig() {
+	c = &utils.Configuration{}
 	c.Read("test_config", "yml")
+}
 
-	ep := new(MockExperienceDbPort)
+func createHandler() {
+	ep = new(MockExperienceDbPort)
 	tp := new(MockTagDbPort)
-	uid := uuid.New()
+	uid = uuid.New()
 	h := services.NewCvServices(ep, tp, utils.NewMockUidGenerator(uid))
-	handler := NewCvApiService(h, c)
+	handler = NewCvApiService(h, c)
 
-	ep.On("Create", mock.Anything, out.NewExperienceDto(uid.String(), "test-name", []string{"test-tag"})).Return(nil)
-
-	r := gin.Default()
+	r = gin.Default()
+	r.Use(MockCorrelationId)
 	r.POST("/experiences", func(c *gin.Context) {
 		handler.CreateExperience(c)
 	})
+}
 
+func prepareData() {
 	experience := CreateExperienceRequest{
 		Name: "test-name",
 		Tags: []string{"test-tag"},
 	}
-	experienceJson, _ := json.Marshal(experience)
+	experienceJson, _ = json.Marshal(experience)
+}
+
+func TestMain(m *testing.M) {
+	readConfig()
+	prepareData()
+
+	m.Run()
+}
+
+func Test_should_create_experince(t *testing.T) {
+	createHandler()
+
+	gin.SetMode(gin.TestMode)
+	ep.On("Create", mock.Anything, out.NewExperienceDto(uid.String(), "test-name", []string{"test-tag"})).Return(nil)
+
 	req, err := http.NewRequest("POST", "/experiences", strings.NewReader(string(experienceJson)))
 	assert.NoError(t, err)
+
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
 	assert.Equal(t, uid.String(), rec.Body.String())
 	assert.Equal(t, http.StatusCreated, rec.Code)
+}
+
+func Test_should_fail_create_experince(t *testing.T) {
+	createHandler()
+
+	gin.SetMode(gin.TestMode)
+	ep.On("Create", mock.Anything, out.NewExperienceDto(uid.String(), "test-name", []string{"test-tag"})).Return(errors.New("test-error"))
+
+	req, err := http.NewRequest("POST", "/experiences", strings.NewReader(string(experienceJson)))
+	assert.NoError(t, err)
+
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+
+	e := &Error{}
+	json.Unmarshal([]byte(rec.Body.String()), e)
+	assert.Equal(t, "EXP0000004", e.Code)
+	assert.Equal(t, "Internal Server error: error while creating experience", e.Message)
+	assert.Equal(t, uuid.MustParse("05f4ae90-b8c9-4673-ab46-1f726e57932f"), e.RequestId)
 }

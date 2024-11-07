@@ -90,7 +90,9 @@ func expectHandler() {
 	uid = uuid.New()
 	h := services.NewCvServices(ep, tp, utils.NewMockUidGenerator(uid))
 	handler = NewCvApiService(h, c)
+}
 
+func expectHandler() {
 	r = gin.Default()
 	r.Use(MockCorrelationId)
 	r.POST("/experiences", func(c *gin.Context) {
@@ -108,6 +110,7 @@ func expectData() {
 
 func TestMain(m *testing.M) {
 	readConfig()
+	expectHandler()
 	expectData()
 
 	m.Run()

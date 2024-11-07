@@ -92,7 +92,7 @@ func expectHandler() {
 	handler = NewCvApiService(h, c)
 }
 
-func expectHandler() {
+func expectEngine() {
 	r = gin.Default()
 	r.Use(MockCorrelationId)
 	r.POST("/experiences", func(c *gin.Context) {
@@ -110,19 +110,21 @@ func expectData() {
 
 func TestMain(m *testing.M) {
 	readConfig()
-	expectHandler()
 	expectData()
 
 	m.Run()
 }
 
 func Test_should_create_experince(t *testing.T) {
+	expectEngine()
 	expectHandler()
 
 	gin.SetMode(gin.TestMode)
-	ep.On("Create", mock.Anything, out.NewExperienceDto(uid.String(), "test-name", []string{"test-tag"})).Return(nil)
+	dto := out.NewExperienceDto(uid.String(), "test-name", []string{"test-tag"})
+	ep.On("Create", mock.Anything, dto).Return(nil)
 
-	req, err := http.NewRequest("POST", "/experiences", strings.NewReader(string(experienceJson)))
+	reader := strings.NewReader(string(experienceJson))
+	req, err := http.NewRequest("POST", "/experiences", reader)
 	assert.NoError(t, err)
 
 	rec := httptest.NewRecorder()
@@ -133,6 +135,7 @@ func Test_should_create_experince(t *testing.T) {
 }
 
 func Test_should_fail_create_experince(t *testing.T) {
+	expectEngine()
 	expectHandler()
 
 	gin.SetMode(gin.TestMode)

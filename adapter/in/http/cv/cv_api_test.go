@@ -98,7 +98,7 @@ func createHandler() {
 	})
 }
 
-func prepareData() {
+func expectData() {
 	experience := CreateExperienceRequest{
 		Name: "test-name",
 		Tags: []string{"test-tag"},
@@ -108,7 +108,7 @@ func prepareData() {
 
 func TestMain(m *testing.M) {
 	readConfig()
-	prepareData()
+	expectData()
 
 	m.Run()
 }

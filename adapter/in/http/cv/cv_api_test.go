@@ -13,6 +13,7 @@ import (
 	services "github.com/ernstvorsteveld/go-cv-cassandra/domain/serivces"
 	"github.com/google/uuid"
 
+	m "github.com/ernstvorsteveld/go-cv-cassandra/pkg/middleware"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -94,7 +95,7 @@ func expectHandler() {
 
 func expectEngine() {
 	r = gin.Default()
-	r.Use(MockCorrelationId)
+	r.Use(m.MockCorrelationId)
 	r.POST("/experiences", func(c *gin.Context) {
 		handler.CreateExperience(c)
 	})

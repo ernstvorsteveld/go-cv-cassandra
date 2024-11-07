@@ -10,7 +10,6 @@ import (
 
 	"log/slog"
 
-	"github.com/ernstvorsteveld/go-cv-cassandra/domain/model"
 	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/in"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -69,23 +68,24 @@ func (cs *CvApiHandler) ListExperiences(c *gin.Context, params ListExperiencesPa
 // (POST /experiences)
 func (cs *CvApiHandler) CreateExperience(c *gin.Context) {
 	slog.Debug("cv.CreateExperience", "content", "About to Create an Experience", "correlationId", Get(CORRELATION_ID_HEADER, c))
-	ctx := utils.NewDefaultContextWrapper(c, Get(CORRELATION_ID_HEADER, c).(string)).Build()
+	ctx := utils.NewDefaultContextWrapper(c, Get(CORRELATION_ID_HEADER, c).(string)).AddUrl(cs.c.Api.CV.Url).Build()
 
-	var e model.Experience
+	var e CreateExperienceRequest
 	if err := c.ShouldBindJSON(&e); err != nil {
 		slog.Debug("cv.CreateExperience", "content", "Error while creating Experience", "correlationId", Get(CORRELATION_ID_HEADER, c), "error-code", "EXP0000003", "error", err.Error())
 		c.JSON(http.StatusBadRequest, newError(ctx, "EXP0000003"))
 		return
 	}
-	m, err := cs.u.CreateExperience(ctx, in.NewCreateExperienceCommand(e.GetName(), e.GetTags()))
+	m, err := cs.u.CreateExperience(ctx, in.NewCreateExperienceCommand(e.Name, e.Tags))
 	if err != nil {
 		slog.Debug("cv.CreateExperience", "content", "Error while creating Experience", "correlationId", Get(CORRELATION_ID_HEADER, c), "error-code", "EXP0000004", "error", err.Error())
 		c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000004"))
 		return
 	}
-	c.Writer.Header().Set(LOCATION_HEADER, fmt.Sprintf("http://localhost:8091/experiences/%s", m.Id))
+	c.Writer.Header().Set(LOCATION_HEADER, fmt.Sprintf("%s/experiences/%s", utils.GetHostUrl(ctx), m.GetId()))
 	c.Writer.Header().Set(OBJECT_ID_HEADER, m.Id)
-	c.JSON(http.StatusCreated, m.Id)
+
+	c.Data(http.StatusCreated, "application/json", []byte(m.Id))
 }
 
 // Info for a specific experience
@@ -134,8 +134,23 @@ func (cs *CvApiHandler) ListTags(c *gin.Context) {
 // (POST /tags)
 func (cs *CvApiHandler) CreateTag(c *gin.Context) {
 	slog.Debug("cv.CreateTag", "content", "About to create Tag")
-	// ctx := utils.NewDefaultContextWrapper(c, Get(CORRELATION_ID_HEADER, c).(string)).Build()
-	c.JSON(http.StatusOK, nil)
+	ctx := utils.NewDefaultContextWrapper(c, Get(CORRELATION_ID_HEADER, c).(string)).AddUrl(cs.c.Api.CV.Url).Build()
+
+	var t Tag
+	if err := c.ShouldBindJSON(&t); err != nil {
+		slog.Debug("cv.CreateTag", "content", "Error while creating Tag", "correlationId", Get(CORRELATION_ID_HEADER, c), "error-code", "TAG0000002", "error", err.Error())
+		c.JSON(http.StatusBadRequest, newError(ctx, "EXP0000002"))
+		return
+	}
+	m, err := cs.u.CreateTag(ctx, in.NewCreateTagCommand(t.Tag))
+	if err != nil {
+		slog.Debug("cv.CreateTag", "content", "Error while creating Tag", "correlationId", Get(CORRELATION_ID_HEADER, c), "error-code", "TAG0000003", "error", err.Error())
+		c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000004"))
+		return
+	}
+	c.Writer.Header().Set(LOCATION_HEADER, fmt.Sprintf("%s/tags/%s", utils.GetHostUrl(ctx), m.GetId()))
+	c.Writer.Header().Set(OBJECT_ID_HEADER, m.Id)
+	c.JSON(http.StatusCreated, m.Id)
 }
 
 func NewGinCvServer(h *CvApiHandler, c *utils.Configuration) *http.Server {
@@ -220,10 +235,12 @@ func (v StringArray) contains(s string) bool {
 var experienceErrors = map[string]string{
 	"EXP0000001": "error while retrieving experiences",
 	"EXP0000002": "error while marshalling experiences",
-	"EXP0000003": "error while marshalling input payload",
+	"EXP0000003": "error while marshalling input payload Experience",
 	"EXP0000004": "Internal Server error: error while creating experience",
 	"EXP0000005": "Internal Server error: error while marshalling experience",
 	"EXP0000006": "Experience with the provided id does not exist",
 	"EXP0000007": "Other error wjile retrieving experience",
 	"TAG0000001": "Error while retrieving tags",
+	"TAG0000002": "error while marshalling input payload Tag",
+	"TAG0000003": "Internal Server error: error while creating Tag",
 }

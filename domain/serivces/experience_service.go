@@ -9,7 +9,6 @@ import (
 	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/in"
 	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/out"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
-	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -23,8 +22,8 @@ func (c *InServices) ListExperiences(ctx context.Context, command *in.ListExperi
 
 func (c *InServices) CreateExperience(ctx context.Context, command *in.CreateExperienceCommand) (*model.Experience, error) {
 	slog.Debug("serivces.CreateExperience", "content", "About to Create Experience", "correlationId", utils.GetCorrelationId(ctx))
-	dto := out.NewExperienceDto(uuid.NewString(), command.Name, command.Tags)
-	err := c.ep.Create(context.Background(), dto)
+	dto := out.NewExperienceDto(c.ig.UUIDString(), command.Name, command.Tags)
+	err := c.ep.Create(ctx, dto)
 	if err != nil {
 		slog.Info("serivces.CreateExperience", "content", "Error while creating experience", "correlationId", utils.GetCorrelationId(ctx), "error", err.Error())
 		return nil, err

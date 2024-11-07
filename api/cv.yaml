@@ -62,7 +62,7 @@ paths:
             application/json:
               example: []
               schema:
-                $ref: "#/components/schemas/Experiences"
+                $ref: "#/components/schemas/ListOfExperiencesResponse"
         default:
           description: unexpected error
           content:
@@ -160,7 +160,7 @@ paths:
                   "tags": ["tag1", "tag2"],
                 }
               schema:
-                $ref: "#/components/schemas/Experience"
+                $ref: "#/components/schemas/ExperienceResponse"
         default:
           description: Could not find experience
           headers:
@@ -206,7 +206,7 @@ paths:
                   },
                 ]
               schema:
-                $ref: "#/components/schemas/TagsResponse"
+                $ref: "#/components/schemas/ListOfTagsResponse"
         default:
           description: Could not find tags
           headers:
@@ -297,44 +297,23 @@ components:
           type: string
           format: uuid
           example: "12345678-1234-1234-1234-1234567890ab"
-    Tag:
-      required:
-        - tag
-      description: A tag
-      example: tag1
-      properties:
-        tag:
-          example: tag1
-          type: string
-          maxLength: 50
-          format: ".{1,50}"
-    TagArray:
-      type: array
-      description: Array of tags
-      example: ["tag1", "tag2"]
-      items:
-        $ref: "#/components/schemas/Tag"
-    TagArrayType:
-      type: object
-      description: Payload for tags
-      example: { "tags": ["tag1", "tag2"] }
-      properties:
-        tags:
-          type: array
-          example: ["tag1", "tag2"]
-          items:
-            $ref: "#/components/schemas/Tag"
     ExperiencePayload:
       type: object
       description: Payload for creating an experience
       example: { "name": "Experience Name", "tags": ["tag1", "tag2"] }
       required:
         - name
+        - tags
       properties:
         name:
           type: string
           example: Experience Name
-    Experiences:
+        tags:
+          type: array
+          example: ["tag1", "tag2"]
+          items:
+            type: string
+    ListOfExperiencesResponse:
       type: array
       maxItems: 100
       description: Array of experiences
@@ -347,8 +326,8 @@ components:
           },
         ]
       items:
-        $ref: "#/components/schemas/Experience"
-    Experience:
+        $ref: "#/components/schemas/ExperienceResponse"
+    ExperienceResponse:
       description: An existing experience
       allOf:
         - $ref: "#/components/schemas/ObjectId"
@@ -357,8 +336,47 @@ components:
     CreateExperienceRequest:
       description: Request to create an experience
       allOf:
-        - $ref: "#/components/schemas/TagArrayType"
         - $ref: "#/components/schemas/ExperiencePayload"
+    ListOfTagsResponse:
+      description: List of tags
+      type: array
+      example:
+        [{ "id": "12345678-1234-1234-1234-1234567890ab", "name": "tag1" }]
+      items:
+        $ref: "#/components/schemas/TagResponse"
+    Tag:
+      required:
+        - tag
+      description: A tag
+      example: tag1
+      properties:
+        tag:
+          example: tag1
+          type: string
+          maxLength: 50
+          format: ".{1,50}"
+    TagResponse:
+      description: A single tag
+      type: object
+      required:
+        - id
+        - name
+      example: { "id": "12345678-1234-1234-1234-1234567890ab", "name": "tag1" }
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "12345678-1234-1234-1234-1234567890ab"
+        name:
+          type: string
+          example: name
+          pattern: "[A-Za-z0-9_-\\s]{3,50}"
+    TagArray:
+      type: array
+      description: Array of tags
+      example: ["tag1", "tag2"]
+      items:
+        $ref: "#/components/schemas/Tag"
     Error:
       type: object
       description: Error response
@@ -384,26 +402,3 @@ components:
         message:
           type: string
           example: An error occurred
-    TagsResponse:
-      description: List of tags
-      type: array
-      example:
-        [{ "id": "12345678-1234-1234-1234-1234567890ab", "name": "tag1" }]
-      items:
-        $ref: "#/components/schemas/TagResponse"
-    TagResponse:
-      description: A single tag
-      type: object
-      required:
-        - id
-        - name
-      example: { "id": "12345678-1234-1234-1234-1234567890ab", "name": "tag1" }
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: "12345678-1234-1234-1234-1234567890ab"
-        name:
-          type: string
-          example: name
-          pattern: "[A-Za-z0-9_-\\s]{3,50}"

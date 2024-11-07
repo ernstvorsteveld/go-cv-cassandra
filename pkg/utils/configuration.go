@@ -36,6 +36,7 @@ type APIConfiguration struct {
 
 type ApiInstance struct {
 	Port          string
+	Url           string
 	Expectedhosts []string
 }
 

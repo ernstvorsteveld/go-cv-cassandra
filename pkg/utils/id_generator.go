@@ -21,3 +21,21 @@ func (g *DefaultUuidGenerator) UUIDString() string {
 func (g *DefaultUuidGenerator) UUID() uuid.UUID {
 	return uuid.New()
 }
+
+type MockUidGenerator struct {
+	value uuid.UUID
+}
+
+func NewMockUidGenerator(value uuid.UUID) *MockUidGenerator {
+	return &MockUidGenerator{
+		value: value,
+	}
+}
+
+func (g *MockUidGenerator) UUIDString() string {
+	return g.value.String()
+}
+
+func (g *MockUidGenerator) UUID() uuid.UUID {
+	return g.value
+}

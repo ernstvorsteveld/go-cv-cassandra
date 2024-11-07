@@ -7,9 +7,12 @@ import (
 	"github.com/google/uuid"
 )
 
-const CORRELATION_ID_HEADER = "X-CORRELATION-ID"
-const CORRELATION_ID = "correlationId"
-const PARENT_CORRELATION_ID = "parentCorrelationId"
+const (
+	CORRELATION_ID_HEADER = "X-CORRELATION-ID"
+	CORRELATION_ID        = "correlationId"
+	PARENT_CORRELATION_ID = "parentCorrelationId"
+	HOST_URL              = "hostUrl"
+)
 
 type ContextWrapper struct {
 	g IdGenerator
@@ -37,6 +40,11 @@ func NewContextWrapper(pc context.Context, ig IdGenerator) ContextWrapper {
 	return w
 }
 
+func (w ContextWrapper) AddUrl(url string) ContextWrapper {
+	w.m = add(w.m, HOST_URL, url)
+	return w
+}
+
 func (w ContextWrapper) AddParentCorrelationId() ContextWrapper {
 	w.m = add(w.m, PARENT_CORRELATION_ID, w.g.UUIDString())
 	return w
@@ -52,6 +60,10 @@ func GetCorrelationId(c context.Context) string {
 
 func GetParentCorrelationId(c context.Context) string {
 	return get(PARENT_CORRELATION_ID, c).(string)
+}
+
+func GetHostUrl(c context.Context) string {
+	return get(HOST_URL, c).(string)
 }
 
 func add(m map[string]any, k string, v any) map[string]any {

@@ -52,7 +52,7 @@ func main() {
 	session := cassandra.NewCassandraSession(c)
 	ep := cassandra.NewExperiencePort(c, session)
 	tp := cassandra.NewTagPort(c, session)
-	h := services.NewCvServices(ep, tp)
+	h := services.NewCvServices(ep, tp, utils.NewDefaultUuidGenerator())
 	apiServer := cv.NewGinCvServer(cv.NewCvApiService(h, c), c)
 
 	monitoringServer := monitoring.NewGinMonitoringServer(monitoring.NewMonitoringApiService(c), c)
@@ -60,10 +60,11 @@ func main() {
 	g.Go(func() error {
 		return monitoringServer.ListenAndServe()
 	})
-	slog.Debug("main", "content", "Start Cv API")
+	slog.Debug("main", "content", "Started Monitoring API")
 	g.Go(func() error {
 		return apiServer.ListenAndServe()
 	})
+	slog.Debug("main", "content", "Started CV API")
 
 	if err := g.Wait(); err != nil {
 		log.Fatal(err)

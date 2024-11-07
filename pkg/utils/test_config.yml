@@ -2,6 +2,7 @@ debugLevel: DEBUG
 api:
   cv:
     port: 8091
+    url: http://localhost:8091
     expectedHosts:
       - localhost:8091
       - localhost:8092

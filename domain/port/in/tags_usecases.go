@@ -16,3 +16,11 @@ type GetTagByIdCommand struct {
 func NewGetTagByIdCommand(id string) *GetTagByIdCommand {
 	return &GetTagByIdCommand{Id: id}
 }
+
+type CreateTagCommand struct {
+	Name string
+}
+
+func NewCreateTagCommand(name string) *CreateTagCommand {
+	return &CreateTagCommand{Name: name}
+}

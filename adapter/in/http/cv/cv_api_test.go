@@ -84,7 +84,7 @@ func readConfig() {
 	c.Read("test_config", "yml")
 }
 
-func createHandler() {
+func expectHandler() {
 	ep = new(MockExperienceDbPort)
 	tp := new(MockTagDbPort)
 	uid = uuid.New()
@@ -114,7 +114,7 @@ func TestMain(m *testing.M) {
 }
 
 func Test_should_create_experince(t *testing.T) {
-	createHandler()
+	expectHandler()
 
 	gin.SetMode(gin.TestMode)
 	ep.On("Create", mock.Anything, out.NewExperienceDto(uid.String(), "test-name", []string{"test-tag"})).Return(nil)
@@ -130,7 +130,7 @@ func Test_should_create_experince(t *testing.T) {
 }
 
 func Test_should_fail_create_experince(t *testing.T) {
-	createHandler()
+	expectHandler()
 
 	gin.SetMode(gin.TestMode)
 	ep.On("Create", mock.Anything, out.NewExperienceDto(uid.String(), "test-name", []string{"test-tag"})).Return(errors.New("test-error"))

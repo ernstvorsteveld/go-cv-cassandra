@@ -19,7 +19,7 @@ import (
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Metrics
-	// (GET /metrics)
+	// (GET /v1/metrics)
 	Metrics(c *gin.Context)
 }
 
@@ -72,18 +72,18 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
-	router.GET(options.BaseURL+"/metrics", wrapper.Metrics)
+	router.GET(options.BaseURL+"/v1/metrics", wrapper.Metrics)
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/4yRP2/jMAzFv4rAu9GwnLtNW3CThwBBcO0SZBAUJlZr/QFFpw0Cf/dCShyjaYdOIojH",
-	"H6n3LmCCi8Gj5wTqAsl06HQpV8hkTdpgisEnzK09JkM2sg0e1CQQh0BiTcEhdzgkQdNABfiuXewRFDz5",
-	"Vx/ePFTA55gbicn6I4zjWIH1h/ANPnjLIauW67Ys+TcQWTP0gxPPlnXe0FuDt+O8dhm8av/DWAFbLosf",
-	"Z8SMFct1CxWckNJ146Ju6iYPh4heRwsK/pZWBVFzV1yR7vrrXB+Rv569QR7IJ6H7XkzaQiSdFe1+dg4q",
-	"mMwqvD9Nkx8TPKMvaB1jb00ZlC8p86eIcvWb8AAKfsk5Q3kLUD6mV4z+SX6QhWlwTtP506msjwnU9t7Z",
-	"FWRCygaC2l5goB4UdMxRSamjrc1Jx1ib4ORpAePuzpjDurHG3fgRAAD//7yOy+mKAgAA",
+	"H4sIAAAAAAAC/4yRP4/bMAzFv4rAdjQsp920BZ08BAiCtkuQQVCYWK31BxTtuyDwdz9IiWNc7oabTBOP",
+	"P1LvXcEEF4NHzwnUFZLp0OlSbpDJmrTDFINPmFtHTIZsZBs8qFkgToHEloJD7nBIguaBCvBVu9gjKPjj",
+	"//vw4qECvsTcSEzWn2GapgqsP4VP8MFbDlm13rZlya+ByJqhH5z4a1nnDb01eD/Oa5fBm/Y3TBWw5bL4",
+	"eUYsWLHetlDBiJRuG1d1Uzd5OET0OlpQ8LO0Koiau+KKHFfS3R6ef8/IHy/fIQ/kk9B9L2ZtgZLOiva4",
+	"mAcVzH4V3o+myR8TPKMvaB1jb00ZlP9S5s8p5eo74QkUfJNLjPKeoXwOsHj9lQghC9PgnKbLu1NZnxOo",
+	"/aNzKMiElD0Etb/CQD0o6JijklJHW5tRx1ib4OS4gunwYCx53VnTYXoLAAD///ZVRCKNAgAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

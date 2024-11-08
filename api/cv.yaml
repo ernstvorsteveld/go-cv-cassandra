@@ -9,9 +9,9 @@ tags:
   - name: Experiences
   - name: Tags
 servers:
-  - url: "http://api.cvapp.com/v1"
+  - url: "http://api.cvapp.com/cv"
 paths:
-  /experiences:
+  /v1/experiences:
     get:
       description: Returns all experiences
       summary: List all experiences
@@ -126,7 +126,7 @@ paths:
                 }
               schema:
                 $ref: "#/components/schemas/Error"
-  /experiences/{id}:
+  /v1/experiences/{id}:
     get:
       summary: Info for a specific experience
       description: Returns the experience with the given id
@@ -180,7 +180,7 @@ paths:
                 }
               schema:
                 $ref: "#/components/schemas/Error"
-  /tags:
+  /v1/tags:
     get:
       summary: List all tags
       description: Returns all tags

@@ -10,7 +10,7 @@ tags:
 servers:
   - url: "http://api.cvapp.com/v1"
 paths:
-  /metrics:
+  /v1/metrics:
     get:
       summary: Metrics
       description: Returns all metrics

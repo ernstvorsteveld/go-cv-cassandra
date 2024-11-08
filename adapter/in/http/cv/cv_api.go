@@ -170,7 +170,10 @@ func NewGinCvServer(h *CvApiHandler, c *utils.Configuration) *http.Server {
 	// This is how you set up a basic gin router
 	r := gin.Default()
 
-	r.Use(m.CorrelationId, m.Authenticate, m.ValidHostHeaders, m.SecurityHeaders, m.ErrorHandler())
+	r.Use(m.CorrelationId(utils.NewDefaultUuidGenerator()))
+	r.Use(m.Authenticate)
+	r.Use(m.ValidHostHeaders, m.SecurityHeaders)
+	r.Use(m.ErrorHandler())
 
 	// Use our validation middleware to check all requests against the
 	// OpenAPI schema.

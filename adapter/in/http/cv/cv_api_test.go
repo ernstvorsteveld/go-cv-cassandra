@@ -15,6 +15,7 @@ import (
 
 	m "github.com/ernstvorsteveld/go-cv-cassandra/pkg/middleware"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
+	utils_mock "github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils/mock"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -74,8 +75,10 @@ func (m *MockTagDbPort) Delete(ctx context.Context, id string) (*out.TagDto, err
 var (
 	c              *utils.Configuration
 	ep             *MockExperienceDbPort
+	tp             *MockTagDbPort
+	ig             utils.IdGenerator
 	handler        *CvApiHandler
-	uid            uuid.UUID
+	uid            uuid.UUID = uuid.New()
 	r              *gin.Engine
 	experienceJson []byte
 )
@@ -85,17 +88,20 @@ func readConfig() {
 	c.Read("test_config", "yml")
 }
 
-func expectHandler() {
+func expectMocks() {
+	ig = utils_mock.NewMockUuidGenerator(uid)
 	ep = new(MockExperienceDbPort)
-	tp := new(MockTagDbPort)
-	uid = uuid.New()
-	h := services.NewCvServices(ep, tp, utils.NewMockUidGenerator(uid))
+	tp = new(MockTagDbPort)
+}
+
+func expectHandler() {
+	h := services.NewCvServices(ep, tp, ig)
 	handler = NewCvApiService(h, c)
 }
 
 func expectEngine() {
 	r = gin.Default()
-	r.Use(m.MockCorrelationId)
+	r.Use(m.CorrelationId(ig))
 	r.POST("/experiences", func(c *gin.Context) {
 		handler.CreateExperience(c)
 	})
@@ -111,6 +117,7 @@ func expectData() {
 
 func TestMain(m *testing.M) {
 	readConfig()
+	expectMocks()
 	expectData()
 
 	m.Run()
@@ -118,6 +125,7 @@ func TestMain(m *testing.M) {
 
 func Test_should_create_experince(t *testing.T) {
 	expectEngine()
+	expectMocks()
 	expectHandler()
 
 	gin.SetMode(gin.TestMode)
@@ -137,6 +145,7 @@ func Test_should_create_experince(t *testing.T) {
 
 func Test_should_fail_create_experince(t *testing.T) {
 	expectEngine()
+	expectMocks()
 	expectHandler()
 
 	gin.SetMode(gin.TestMode)
@@ -154,5 +163,5 @@ func Test_should_fail_create_experince(t *testing.T) {
 	json.Unmarshal([]byte(rec.Body.String()), e)
 	assert.Equal(t, "EXP0000004", e.Code)
 	assert.Equal(t, "Internal Server error: error while creating experience", e.Message)
-	assert.Equal(t, uuid.MustParse("05f4ae90-b8c9-4673-ab46-1f726e57932f"), e.RequestId)
+	assert.Equal(t, uid, e.RequestId)
 }

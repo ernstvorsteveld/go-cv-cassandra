@@ -6,14 +6,14 @@ import (
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/adapter/out/db/mock"
 	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/in"
-	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
+	utils_mock "github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils/mock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_should_create_experience(t *testing.T) {
 	eDB := mock.NewMockExpDb()
-	ig := utils.NewMockUidGenerator(uuid.New())
+	ig := utils_mock.NewMockUuidGenerator(uuid.New())
 	service := NewCvServices(eDB, nil, ig)
 
 	c := in.NewCreateExperienceCommand("test-name", []string{"a", "b"})
@@ -27,7 +27,7 @@ func Test_should_create_experience(t *testing.T) {
 func Test_should_get_experience_by_id(t *testing.T) {
 	eDB := mock.NewMockExpDb()
 	tDB := mock.NewMockTagDb()
-	ig := utils.NewMockUidGenerator(uuid.New())
+	ig := utils_mock.NewMockUuidGenerator(uuid.New())
 	service := NewCvServices(eDB, tDB, ig)
 
 	e := in.NewCreateExperienceCommand("test-name", []string{"a", "b"})

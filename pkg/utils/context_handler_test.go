@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils/mock"
+	utils_mock "github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils/mock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,7 +12,7 @@ import (
 func Test_should_correlation_id(t *testing.T) {
 	uuid := uuid.New()
 
-	w := NewContextWrapper(context.Background(), mock.NewMockUuidGenerator(uuid))
+	w := NewContextWrapper(context.Background(), utils_mock.NewMockUuidGenerator(uuid))
 	w.AddParentCorrelationId()
 	ctx := w.Build()
 

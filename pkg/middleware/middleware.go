@@ -10,23 +10,17 @@ import (
 
 const CORRELATION_ID_HEADER = "X-CORRELATION-ID"
 
-var idGenerator = utils.NewDefaultUuidGenerator()
 var ExpectedHosts StringArray
 
 type StringArray []string
 
-func MockCorrelationId(c *gin.Context) {
-	correlationId := "05f4ae90-b8c9-4673-ab46-1f726e57932f"
-	slog.Debug("cv.MockCorrelationId", "content", "About to add correlationId", "correlationId", correlationId)
-	c.Header(CORRELATION_ID_HEADER, correlationId)
-	c.Next()
-}
-
-func CorrelationId(c *gin.Context) {
-	correlationId := idGenerator.UUIDString()
-	slog.Debug("cv.CorrelationId", "content", "About to add correlationId", "correlationId", correlationId)
-	c.Header(CORRELATION_ID_HEADER, correlationId)
-	c.Next()
+func CorrelationId(ig utils.IdGenerator) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		correlationId := ig.UUIDString()
+		slog.Debug("cv.CorrelationId", "content", "About to add correlationId", "correlationId", correlationId)
+		c.Header(CORRELATION_ID_HEADER, correlationId)
+		c.Next()
+	}
 }
 
 func Authenticate(c *gin.Context) {
@@ -84,12 +78,4 @@ func (v StringArray) contains(s string) bool {
 
 func GetCorrelationIdHeader(c *gin.Context) string {
 	return c.Writer.Header().Get(CORRELATION_ID_HEADER)
-}
-
-func get(k string, c *gin.Context) any {
-	value := c.Writer.Header().Get(CORRELATION_ID_HEADER)
-	if value == "" {
-		return "UNKNOWN"
-	}
-	return value
 }

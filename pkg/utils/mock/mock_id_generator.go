@@ -1,21 +1,21 @@
-package mock
+package utils_mock
 
 import "github.com/google/uuid"
 
 type MockUuidGenerator struct {
-	Uuid uuid.UUID
+	Uid uuid.UUID
 }
 
-func NewMockUuidGenerator(uuid uuid.UUID) *MockUuidGenerator {
+func NewMockUuidGenerator(uid uuid.UUID) *MockUuidGenerator {
 	return &MockUuidGenerator{
-		Uuid: uuid,
+		Uid: uid,
 	}
 }
 
 func (g *MockUuidGenerator) UUIDString() string {
-	return g.Uuid.String()
+	return g.Uid.String()
 }
 
-func (g *MockUuidGenerator) UUID() uuid.UUID {
-	return g.Uuid
+func (g *MockUuidGenerator) New() uuid.UUID {
+	return g.Uid
 }

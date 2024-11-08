@@ -51,7 +51,8 @@ func (w ContextWrapper) AddParentCorrelationId() ContextWrapper {
 }
 
 func GetCorrelationUuid(c context.Context) uuid.UUID {
-	return uuid.MustParse(get(CORRELATION_ID, c).(string))
+	uid := get(CORRELATION_ID, c)
+	return uuid.MustParse(uid.(string))
 }
 
 func GetCorrelationId(c context.Context) string {

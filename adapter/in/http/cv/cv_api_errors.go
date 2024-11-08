@@ -12,7 +12,7 @@ import (
 func NewError(ctx *gin.Context, err error, code string, status int) {
 	cId := m.GetCorrelationIdHeader(ctx)
 	text := m.ExperienceErrors[code]
-	slog.Debug("cv.CreateExperience", "content", text, "correlationId", cId, "error-code", code, "error", err.Error())
+	slog.Debug("cv.NewError", "content", text, "correlationId", cId, "error-code", code, "error", err.Error())
 	ctx.AbortWithStatusJSON(status, newError(ctx, code))
 }
 
@@ -62,7 +62,7 @@ func NewListTagsError(ctx *gin.Context, err error) {
 }
 
 func NewCreateTagMarshalError(ctx *gin.Context, err error) {
-	code := "EXP0000002"
+	code := "TAG0000002"
 	NewError(ctx, err, code, http.StatusBadRequest)
 }
 

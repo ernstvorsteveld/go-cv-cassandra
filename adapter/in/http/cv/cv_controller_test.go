@@ -54,7 +54,8 @@ type MockTagDbPort struct {
 }
 
 func (m *MockTagDbPort) Create(ctx context.Context, dto *out.TagDto) (*out.TagDto, error) {
-	return nil, nil
+	args := m.Called(ctx, dto)
+	return dto, args.Error(0)
 }
 
 func (m *MockTagDbPort) Get(ctx context.Context, id string) (*out.TagDto, error) {
@@ -82,6 +83,7 @@ var (
 	uid            uuid.UUID = uuid.New()
 	r              *gin.Engine
 	experienceJson []byte
+	tagJson        []byte
 )
 
 func readConfig() {
@@ -106,9 +108,12 @@ func expectEngine() {
 	r.POST("/v1/experiences", func(c *gin.Context) {
 		handler.CreateExperience(c)
 	})
+	r.POST("/v1/tags", func(c *gin.Context) {
+		handler.CreateTag(c)
+	})
 }
 
-func expectData() {
+func expectCreateExperienceRequest() {
 	experience := CreateExperienceRequest{
 		Name: "test-name",
 		Tags: []string{"test-tag"},
@@ -119,15 +124,15 @@ func expectData() {
 func TestMain(m *testing.M) {
 	readConfig()
 	expectMocks()
-	expectData()
 
 	m.Run()
 }
 
-func Test_should_create_experince(t *testing.T) {
+func Test_should_create_experience(t *testing.T) {
 	expectEngine()
 	expectMocks()
 	expectHandler()
+	expectCreateExperienceRequest()
 
 	gin.SetMode(gin.TestMode)
 	dto := out.NewExperienceDto(uid.String(), "test-name", []string{"test-tag"})
@@ -140,15 +145,16 @@ func Test_should_create_experince(t *testing.T) {
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
-	assert.Equal(t, uid.String(), rec.Body.String())
 	assert.Equal(t, http.StatusCreated, rec.Code)
+	assert.Equal(t, uid.String(), rec.Body.String())
 	assert.Equal(t, fmt.Sprintf("/v1/experiences/%s", uid), rec.Header().Get("Location"))
 }
 
-func Test_should_fail_create_experince(t *testing.T) {
+func Test_should_fail_create_experience(t *testing.T) {
 	expectEngine()
 	expectMocks()
 	expectHandler()
+	expectExperienceDto()
 
 	gin.SetMode(gin.TestMode)
 	ep.On("Create", mock.Anything, expectExperienceDto()).Return(errors.New("test-error"))
@@ -170,4 +176,36 @@ func Test_should_fail_create_experince(t *testing.T) {
 
 func expectExperienceDto() *out.ExperienceDto {
 	return out.NewExperienceDto(uid.String(), "test-name", []string{"test-tag"})
+}
+
+func Test_should_create_tag(t *testing.T) {
+	expectEngine()
+	expectMocks()
+	expectHandler()
+	expectCreateTagRequest()
+
+	gin.SetMode(gin.TestMode)
+	tp.On("Create", mock.Anything, expectTagDto()).Return(nil)
+
+	reader := strings.NewReader(string(tagJson))
+	req, err := http.NewRequest("POST", "/v1/tags", reader)
+	assert.NoError(t, err)
+
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusCreated, rec.Code)
+	assert.Equal(t, uid.String(), rec.Body.String())
+	assert.Equal(t, fmt.Sprintf("/v1/tags/%s", uid), rec.Header().Get("Location"))
+}
+
+func expectTagDto() *out.TagDto {
+	return out.NewTagDto(uid.String(), "test-tag")
+}
+
+func expectCreateTagRequest() {
+	tag := CreateTagRequest{
+		Tag: "test-tag",
+	}
+	tagJson, _ = json.Marshal(tag)
 }

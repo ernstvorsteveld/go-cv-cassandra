@@ -9,7 +9,6 @@ import (
 	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/in"
 	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/out"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
-	"github.com/google/uuid"
 )
 
 type TagServices struct {
@@ -27,8 +26,8 @@ func (c *InServices) GetTagById(ctx context.Context, command *in.GetTagByIdComma
 
 func (c *InServices) CreateTag(ctx context.Context, command *in.CreateTagCommand) (*model.Tag, error) {
 	slog.Debug("serivces.CreateTag", "content", "About to Create Tag", "correlationId", utils.GetCorrelationId(ctx))
-	dto := out.NewTagDto(uuid.NewString(), command.Name)
-	_, err := c.tp.Create(context.Background(), dto)
+	dto := out.NewTagDto(c.ig.UUIDString(), command.Name)
+	_, err := c.tp.Create(ctx, dto)
 	if err != nil {
 		slog.Info("serivces.CreateTag", "content", "Error while creating tag", "correlationId", utils.GetCorrelationId(ctx), "error", err.Error())
 		return nil, err

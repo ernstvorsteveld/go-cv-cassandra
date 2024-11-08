@@ -112,7 +112,7 @@ func (cs *CvApiHandler) ListTags(c *gin.Context) {
 // (POST /tags)
 func (cs *CvApiHandler) CreateTag(c *gin.Context) {
 	cId := m.GetCorrelationIdHeader(c)
-	slog.Debug("cv.CreateTag", "content", "About to create Tag")
+	slog.Debug("cv.CreateTag", "content", "About to create Tag", "correlationId", cId)
 	ctx := utils.NewDefaultContextWrapper(c, cId).AddUrl(cs.c.Api.Url).Build()
 
 	var t Tag
@@ -125,7 +125,7 @@ func (cs *CvApiHandler) CreateTag(c *gin.Context) {
 		NewCreateTagError(c, err)
 		return
 	}
-	c.Writer.Header().Set(LOCATION_HEADER, fmt.Sprintf("%s/tags/%s", utils.GetHostUrl(ctx), m.GetId()))
+	c.Writer.Header().Set(LOCATION_HEADER, location(c, m.GetId()))
 	c.Writer.Header().Set(OBJECT_ID_HEADER, m.Id)
-	c.JSON(http.StatusCreated, m.Id)
+	c.Data(http.StatusCreated, "application/json", []byte(m.Id))
 }

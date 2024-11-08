@@ -238,7 +238,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Tag"
+              $ref: "#/components/schemas/CreateTagRequest"
       responses:
         201:
           description: Tag created
@@ -344,6 +344,17 @@ components:
         [{ "id": "12345678-1234-1234-1234-1234567890ab", "name": "tag1" }]
       items:
         $ref: "#/components/schemas/TagResponse"
+    CreateTagRequest:
+      required:
+        - tag
+      description: A tag
+      example: tag1
+      properties:
+        tag:
+          example: tag1
+          type: string
+          maxLength: 50
+          format: ".{1,50}"
     Tag:
       required:
         - tag

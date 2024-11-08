@@ -51,7 +51,7 @@ func (cs *CvApiHandler) ListExperiences(c *gin.Context, params ListExperiencesPa
 func (cs *CvApiHandler) CreateExperience(c *gin.Context) {
 	cId := m.GetCorrelationIdHeader(c)
 	slog.Debug("cv.CreateExperience", "content", "About to Create an Experience", "correlationId", cId)
-	ctx := utils.NewDefaultContextWrapper(c, cId).AddUrl(cs.c.Api.CV.Url).Build()
+	ctx := utils.NewDefaultContextWrapper(c, cId).AddUrl(cs.c.Api.Url).Build()
 
 	var e CreateExperienceRequest
 	if err := c.ShouldBindJSON(&e); err != nil {
@@ -63,10 +63,18 @@ func (cs *CvApiHandler) CreateExperience(c *gin.Context) {
 		NewCreateExperienceError(c, err)
 		return
 	}
-	c.Writer.Header().Set(LOCATION_HEADER, fmt.Sprintf("%s/experiences/%s", utils.GetHostUrl(ctx), m.GetId()))
+	c.Writer.Header().Set(LOCATION_HEADER, location(c, m.GetId()))
 	c.Writer.Header().Set(OBJECT_ID_HEADER, m.Id)
 
 	c.Data(http.StatusCreated, "application/json", []byte(m.Id))
+}
+
+func location(c *gin.Context, id string) string {
+	host := c.Request.Host
+	path := c.Request.URL.String()
+
+	base := host + path
+	return fmt.Sprintf("%s/%s", base, id)
 }
 
 // Info for a specific experience
@@ -105,7 +113,7 @@ func (cs *CvApiHandler) ListTags(c *gin.Context) {
 func (cs *CvApiHandler) CreateTag(c *gin.Context) {
 	cId := m.GetCorrelationIdHeader(c)
 	slog.Debug("cv.CreateTag", "content", "About to create Tag")
-	ctx := utils.NewDefaultContextWrapper(c, cId).AddUrl(cs.c.Api.CV.Url).Build()
+	ctx := utils.NewDefaultContextWrapper(c, cId).AddUrl(cs.c.Api.Url).Build()
 
 	var t Tag
 	if err := c.ShouldBindJSON(&t); err != nil {

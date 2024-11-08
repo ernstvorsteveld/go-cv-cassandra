@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -102,7 +103,7 @@ func expectHandler() {
 func expectEngine() {
 	r = gin.Default()
 	r.Use(m.CorrelationId(ig))
-	r.POST("/experiences", func(c *gin.Context) {
+	r.POST("/v1/experiences", func(c *gin.Context) {
 		handler.CreateExperience(c)
 	})
 }
@@ -133,7 +134,7 @@ func Test_should_create_experince(t *testing.T) {
 	ep.On("Create", mock.Anything, dto).Return(nil)
 
 	reader := strings.NewReader(string(experienceJson))
-	req, err := http.NewRequest("POST", "/experiences", reader)
+	req, err := http.NewRequest("POST", "/v1/experiences", reader)
 	assert.NoError(t, err)
 
 	rec := httptest.NewRecorder()
@@ -141,6 +142,7 @@ func Test_should_create_experince(t *testing.T) {
 
 	assert.Equal(t, uid.String(), rec.Body.String())
 	assert.Equal(t, http.StatusCreated, rec.Code)
+	assert.Equal(t, fmt.Sprintf("/v1/experiences/%s", uid), rec.Header().Get("Location"))
 }
 
 func Test_should_fail_create_experince(t *testing.T) {
@@ -149,9 +151,9 @@ func Test_should_fail_create_experince(t *testing.T) {
 	expectHandler()
 
 	gin.SetMode(gin.TestMode)
-	ep.On("Create", mock.Anything, out.NewExperienceDto(uid.String(), "test-name", []string{"test-tag"})).Return(errors.New("test-error"))
+	ep.On("Create", mock.Anything, expectExperienceDto()).Return(errors.New("test-error"))
 
-	req, err := http.NewRequest("POST", "/experiences", strings.NewReader(string(experienceJson)))
+	req, err := http.NewRequest("POST", "/v1/experiences", strings.NewReader(string(experienceJson)))
 	assert.NoError(t, err)
 
 	rec := httptest.NewRecorder()
@@ -164,4 +166,8 @@ func Test_should_fail_create_experince(t *testing.T) {
 	assert.Equal(t, "EXP0000004", e.Code)
 	assert.Equal(t, "internal server error: error while creating experience", e.Message)
 	assert.Equal(t, uid, e.RequestId)
+}
+
+func expectExperienceDto() *out.ExperienceDto {
+	return out.NewExperienceDto(uid.String(), "test-name", []string{"test-tag"})
 }

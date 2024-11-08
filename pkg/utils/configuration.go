@@ -30,13 +30,13 @@ type CassandraConfiguration struct {
 }
 
 type APIConfiguration struct {
+	Url        string
 	CV         ApiInstance
 	Monitoring ApiInstance
 }
 
 type ApiInstance struct {
 	Port          string
-	Url           string
 	Expectedhosts []string
 }
 

@@ -53,6 +53,11 @@ func ErrorHandler() gin.HandlerFunc {
 		defer func() {
 			c.Next()
 
+			lastError := c.Errors.Last()
+			if lastError != nil {
+				c.JSON(-1, lastError)
+			}
+
 			if err := recover(); err != nil {
 				slog.Info("cv.ErrorHandler", "content", "Recovered Internal Server Error", "correlationId", GetCorrelationIdHeader(c), "error", err)
 				e := Error{

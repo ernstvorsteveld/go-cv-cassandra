@@ -1,7 +1,6 @@
 package cv
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -33,28 +32,18 @@ func NewCvApiService(u in.UseCasesPort, c *utils.Configuration) *CvApiHandler {
 	}
 }
 
-func newError(ctx context.Context, code string) *Error {
-	return &Error{
-		Code:      code,
-		Message:   m.ExperienceErrors[code],
-		RequestId: utils.GetCorrelationUuid(ctx),
-	}
-}
-
 func (cs *CvApiHandler) ListExperiences(c *gin.Context, params ListExperiencesParams) {
 	cId := m.GetCorrelationIdHeader(c)
 	slog.Debug("cv.ListExperiences", "content", "About to List Experiences", "correlationId", cId)
 	ctx := utils.NewDefaultContextWrapper(c, cId).Build()
 	es, err := cs.u.ListExperiences(ctx, in.NewListExperienceCommand(int(*params.Page), int(*params.Limit)))
 	if err != nil {
-		slog.Debug("cv.ListExperiences", "content", "Error while retrieving Experiences", "correlationId", cId, "error-code", "EXP0000001", "error", err.Error())
-		c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000001"))
+		NewListExperienceError(c, err)
 		return
 	}
 	_, err = json.Marshal(es)
 	if err != nil {
-		slog.Debug("cv.ListExperiences", "content", "Error while retrieving Experiences", "correlationId", cId, "error-code", "EXP0000002", "error", err.Error())
-		c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000002"))
+		NewListExperienceMarshalError(c, err)
 		return
 	}
 
@@ -70,14 +59,12 @@ func (cs *CvApiHandler) CreateExperience(c *gin.Context) {
 
 	var e CreateExperienceRequest
 	if err := c.ShouldBindJSON(&e); err != nil {
-		slog.Debug("cv.CreateExperience", "content", "Error while creating Experience", "correlationId", cId, "error-code", "EXP0000003", "error", err.Error())
-		c.JSON(http.StatusBadRequest, newError(ctx, "EXP0000003"))
+		NewExperienceBindError(c, err)
 		return
 	}
 	m, err := cs.u.CreateExperience(ctx, in.NewCreateExperienceCommand(e.Name, e.Tags))
 	if err != nil {
-		slog.Debug("cv.CreateExperience", "content", "Error while creating Experience", "correlationId", cId, "error-code", "EXP0000004", "error", err.Error())
-		c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000004"))
+		NewCreateExperienceError(c, err)
 		return
 	}
 	c.Writer.Header().Set(LOCATION_HEADER, fmt.Sprintf("%s/experiences/%s", utils.GetHostUrl(ctx), m.GetId()))
@@ -96,35 +83,22 @@ func (cs *CvApiHandler) GetExperienceById(c *gin.Context, id string) {
 	if err == nil {
 		_, err := json.Marshal(e)
 		if err != nil {
-			slog.Debug("cv.GetExperienceById", "content", "Error while retrieving Experience by Id", "correlationId", cId, "error-code", "EXP0000005", "error", err.Error())
-			c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000005"))
+			NewGetExperienceByIdMarshalError(c, err)
 			return
 		}
 		c.JSON(http.StatusOK, e)
 	} else {
-		if isNotFound(err) {
-			slog.Debug("cv.GetExperienceById", "content", "Error while retrieving Experience by Id", "correlationId", cId, "error-code", "EXP0000006", "error", err.Error())
-			c.JSON(http.StatusNotFound, newError(ctx, "EXP0000006"))
-			return
-		} else {
-			c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000007"))
-			return
-		}
+		NewGetExperienceByIdNotFoundError(c, err)
 	}
-}
-
-func isNotFound(err error) bool {
-	return err != nil && err.Error() == "not found"
 }
 
 func (cs *CvApiHandler) ListTags(c *gin.Context) {
 	cId := m.GetCorrelationIdHeader(c)
 	slog.Debug("cv.ListTags", "content", "About to List Tags, using defaults page=0 and size=100")
 	ctx := utils.NewDefaultContextWrapper(c, cId).Build()
-	tags, err := cs.u.ListTags(context.Background(), in.NewListTagsCommand(int(0), int(100)))
+	tags, err := cs.u.ListTags(ctx, in.NewListTagsCommand(int(0), int(100)))
 	if err != nil {
-		slog.Debug("cv.ListTags", "content", "Error while retrieving Tags", "correlationId", cId, "error-code", "TAG0000001", "error", err.Error())
-		c.JSON(http.StatusInternalServerError, newError(ctx, "TAG0000001"))
+		NewListTagsError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, tags)
@@ -139,14 +113,12 @@ func (cs *CvApiHandler) CreateTag(c *gin.Context) {
 
 	var t Tag
 	if err := c.ShouldBindJSON(&t); err != nil {
-		slog.Debug("cv.CreateTag", "content", "Error while creating Tag", "correlationId", cId, "error-code", "TAG0000002", "error", err.Error())
-		c.JSON(http.StatusBadRequest, newError(ctx, "EXP0000002"))
+		NewCreateTagMarshalError(c, err)
 		return
 	}
 	m, err := cs.u.CreateTag(ctx, in.NewCreateTagCommand(t.Tag))
 	if err != nil {
-		slog.Debug("cv.CreateTag", "content", "Error while creating Tag", "correlationId", cId, "error-code", "TAG0000003", "error", err.Error())
-		c.JSON(http.StatusInternalServerError, newError(ctx, "EXP0000004"))
+		NewCreateTagError(c, err)
 		return
 	}
 	c.Writer.Header().Set(LOCATION_HEADER, fmt.Sprintf("%s/tags/%s", utils.GetHostUrl(ctx), m.GetId()))

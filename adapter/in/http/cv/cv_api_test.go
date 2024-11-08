@@ -162,6 +162,6 @@ func Test_should_fail_create_experince(t *testing.T) {
 	e := &Error{}
 	json.Unmarshal([]byte(rec.Body.String()), e)
 	assert.Equal(t, "EXP0000004", e.Code)
-	assert.Equal(t, "Internal Server error: error while creating experience", e.Message)
+	assert.Equal(t, "internal server error: error while creating experience", e.Message)
 	assert.Equal(t, uid, e.RequestId)
 }

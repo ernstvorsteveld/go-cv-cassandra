@@ -51,6 +51,8 @@ func SecurityHeaders(c *gin.Context) {
 func ErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
+			c.Next()
+
 			if err := recover(); err != nil {
 				slog.Info("cv.ErrorHandler", "content", "Recovered Internal Server Error", "correlationId", GetCorrelationIdHeader(c), "error", err)
 				e := Error{
@@ -61,8 +63,6 @@ func ErrorHandler() gin.HandlerFunc {
 				c.JSON(http.StatusInternalServerError, e)
 			}
 		}()
-
-		c.Next()
 	}
 }
 

@@ -75,6 +75,21 @@ func isNotFoundError(err error) bool {
 	return err != nil && err.Error() == "not found"
 }
 
+func NewGetTagByIdMarshalError(ctx *gin.Context, err error) {
+	code := "TAG0000005"
+	NewError(ctx, err, code, http.StatusBadRequest)
+}
+
+func NewGetTagByIdNotFoundError(ctx *gin.Context, err error) {
+	if isNotFoundError(err) {
+		code := "TAG0000004"
+		NewError(ctx, err, code, http.StatusNotFound)
+	} else {
+		code := "TAG0000001"
+		NewError(ctx, err, code, http.StatusInternalServerError)
+	}
+}
+
 func newError(ctx *gin.Context, code string) *Error {
 	return &Error{
 		Code:      code,

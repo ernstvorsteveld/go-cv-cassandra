@@ -96,6 +96,8 @@ func (cs *CvApiHandler) GetExperienceById(c *gin.Context, id string) {
 	}
 }
 
+// List all tags
+// (GET /v1/tags)
 func (cs *CvApiHandler) ListTags(c *gin.Context) {
 	cId := m.GetCorrelationIdHeader(c)
 	slog.Debug("cv.ListTags", "content", "About to List Tags, using defaults page=0 and size=100")
@@ -128,4 +130,21 @@ func (cs *CvApiHandler) CreateTag(c *gin.Context) {
 	c.Writer.Header().Set(LOCATION_HEADER, location(c, m.GetId()))
 	c.Writer.Header().Set(OBJECT_ID_HEADER, m.Id)
 	c.Data(http.StatusCreated, "application/json", []byte(m.Id))
+}
+
+func (cs *CvApiHandler) GetTagById(c *gin.Context, id string) {
+	cId := m.GetCorrelationIdHeader(c)
+	slog.Debug("cv.GetTagById", "content", "About to Get Tag by Id", "correlationId", cId)
+	ctx := utils.NewDefaultContextWrapper(c, cId).Build()
+	e, err := cs.u.GetTagById(ctx, in.NewGetTagByIdCommand(id))
+	if err == nil {
+		_, err := json.Marshal(e)
+		if err != nil {
+			NewGetTagByIdMarshalError(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, e)
+	} else {
+		NewGetTagByIdNotFoundError(c, err)
+	}
 }

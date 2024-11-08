@@ -21,7 +21,12 @@ func (c *InServices) ListTags(ctx context.Context, command *in.ListTagsCommand) 
 }
 
 func (c *InServices) GetTagById(ctx context.Context, command *in.GetTagByIdCommand) (*model.Tag, error) {
-	return nil, errors.New("not implemeted yet")
+	slog.Debug("serivces.GetTagById", "content", "About to Get Tag by Id", "correlationId", utils.GetCorrelationId(ctx))
+	dto, err := c.tp.Get(ctx, command.Id)
+	if err != nil {
+		return nil, err
+	}
+	return model.NewTag(dto.GetId(), dto.GetName())
 }
 
 func (c *InServices) CreateTag(ctx context.Context, command *in.CreateTagCommand) (*model.Tag, error) {

@@ -11,13 +11,25 @@ import (
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/cassandra"
 )
 
-var cassandraContainer *cassandra.CassandraContainer
-var session *Session
-var eDBPort db.ExperienceDbPort
+var (
+	cassandraContainer *cassandra.CassandraContainer
+	session            *Session
+	eDBPort            db.ExperienceDbPort
+	tDBPort            db.TagDbPort
+)
+
+type ExperienceDaoSuite struct {
+	suite.Suite
+}
+
+type TagDaoSuite struct {
+	suite.Suite
+}
 
 func TestMain(m *testing.M) {
 	log.Infof("Creating Cassandra Session in TestMain")
@@ -53,13 +65,15 @@ func TestMain(m *testing.M) {
 	session = NewCassandraSession(config)
 	log.Infof("Details: %v", session)
 	eDBPort = NewExperiencePort(config, session)
+	tDBPort = NewTagPort(config, session)
 
 	m.Run()
 
 	cassandraContainer.Terminate(ctx)
 }
 
-func Test_should_create_one_experience(t *testing.T) {
+func (s *ExperienceDaoSuite) Test_should_create_one_experience() {
+	t := s.T()
 	id := uuid.NewString()
 	name := "value1"
 	tags := []string{"ab", "ac"}
@@ -83,7 +97,7 @@ func Test_should_create_one_experience(t *testing.T) {
 	assert.False(t, errors)
 }
 
-func insertOne() (string, string, []string) {
+func insertExperience() (string, string, []string) {
 	q := `INSERT INTO testcv.cv_experiences(id, name, tags) VALUES (?, ?, ?)`
 
 	id := uuid.New().String()
@@ -93,8 +107,9 @@ func insertOne() (string, string, []string) {
 	return id, name, tags
 }
 
-func Test_should_get_one_experience(t *testing.T) {
-	id, name, tags := insertOne()
+func (s *ExperienceDaoSuite) Test_should_get_one_experience() {
+	t := s.T()
+	id, name, tags := insertExperience()
 
 	d, err := eDBPort.Get(context.Background(), id)
 	assert.Nil(t, err)
@@ -105,8 +120,9 @@ func Test_should_get_one_experience(t *testing.T) {
 	log.Infof("Experience: %v", d)
 }
 
-func Test_should_update_one_experience(t *testing.T) {
-	id, _, _ := insertOne()
+func (s *ExperienceDaoSuite) Test_should_update_one_experience() {
+	t := s.T()
+	id, _, _ := insertExperience()
 
 	name := "updated-value"
 	tags := []string{"aaa", "bbb", "ccc", "ddd"}
@@ -129,7 +145,68 @@ func Test_should_update_one_experience(t *testing.T) {
 	assert.False(t, errors)
 }
 
-func Test_should_not_find_experience_by_id(t *testing.T) {
+func (s *ExperienceDaoSuite) Test_should_not_find_experience_by_id() {
+	t := s.T()
 	_, err := eDBPort.Get(context.Background(), "not-existing-id")
 	assert.Equal(t, "not found", err.Error())
+}
+
+func Test_ExperienceDaoSuite(t *testing.T) {
+	suite.Run(t, &ExperienceDaoSuite{})
+}
+
+func (s *TagDaoSuite) Test_should_create_tag() {
+	t := s.T()
+	id := uuid.NewString()
+	name := "tag-name-value"
+
+	dto, err := tDBPort.Create(context.Background(), db.NewTagDto(id, name))
+	if err != nil {
+		log.Printf("failed to start container: %s", err)
+	}
+
+	m := map[string]interface{}{}
+	q := `SELECT * from testcv.cv_tags;`
+	itr := session.cs.Query(q).Iter()
+	errors := true
+	for itr.MapScan(m) {
+		assert.Equal(t, m["id"].(string), dto.GetId())
+		assert.Equal(t, m["name"].(string), dto.GetName())
+		errors = false
+	}
+
+	assert.False(t, errors)
+}
+
+func insertTag() (string, string) {
+	q := `INSERT INTO testcv.cv_tags(id, name) VALUES (?, ?)`
+
+	id := uuid.New().String()
+	name := "test-value-for-get-by-id"
+	session.cs.Query(q, id, name).Exec()
+	return id, name
+}
+
+func (s *TagDaoSuite) Test_should_get_tag_by_id() {
+	t := s.T()
+	id, name := insertTag()
+
+	d, err := tDBPort.Get(context.Background(), id)
+	assert.Nil(t, err)
+	assert.Equal(t, id, d.GetId())
+	assert.Equal(t, name, d.GetName())
+}
+
+func (s *TagDaoSuite) Test_should_delete_tag_by_id() {
+	t := s.T()
+	id, name := insertTag()
+
+	d, err := tDBPort.Delete(context.Background(), id)
+	assert.Nil(t, err)
+	assert.Equal(t, id, d.GetId())
+	assert.Equal(t, name, d.GetName())
+}
+
+func Test_TagDaoSuite(t *testing.T) {
+	suite.Run(t, &TagDaoSuite{})
 }

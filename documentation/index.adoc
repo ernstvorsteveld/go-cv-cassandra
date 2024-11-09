@@ -33,3 +33,16 @@ plantuml::overview.pu[png]
 == Templates
 
 https://github.com/oapi-codegen/oapi-codegen/blob/main/pkg/codegen/templates/gin/gin-interface.tmpl
+
+
+== Testing
+
+.Test commands
+[source,bash
+----
+# Run all tests
+go test -v ./..
+
+# Runs a suite
+go test ./... -run ExperienceDaoSuite -v
+----

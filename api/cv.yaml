@@ -13,8 +13,8 @@ servers:
 paths:
   /v1/experiences:
     get:
-      description: Returns all experiences
-      summary: List all experiences
+      description: Returns a page of experiences
+      summary: Page of experiences
       operationId: listExperiences
       tags:
         - Experiences
@@ -31,28 +31,35 @@ paths:
             example: 25
         - name: page
           in: query
-          description: The page to return
+          description: The identifier of the Experience from with to return a page
           required: false
           schema:
-            type: integer
-            maximum: 999999
-            default: 1
-            format: int32
-            example: 100
+            type: string
+            maxLength: 100
+            format: ".{1,100}"
+            example: some-value
+        - name: tag
+          in: query
+          description: The tag of the Experiences to search for
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+            format: ".{1,100}"
+            example: a-tag-name
+        - name: name
+          in: query
+          description: The name of the Experiences to search for
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+            format: ".{1,100}"
+            example: a-name
       responses:
         "200":
-          description: A paged array of pets
+          description: A paged array of experiences
           headers:
-            X-NEXT:
-              example: "http://api.cvapp.com/v1/experiences?page=2&size=25"
-              description: A link to the next page of responses
-              schema:
-                type: string
-            X-PREVIOUS:
-              example: "http://api.cvapp.com/v1/experiences?page=1&size=25"
-              description: A link to the previous page of responses
-              schema:
-                type: string
             X-CORRELATION-ID:
               example: "12345678-1234-1234-1234-1234567890ab"
               description: Id of the get experiences request
@@ -60,11 +67,23 @@ paths:
                 type: string
           content:
             application/json:
-              example: []
+              example:
+                {
+                  "previous": "http://api.cvapp.com/v1/experiences?page=1&size=25",
+                  "next": "http://api.cvapp.com/v1/experiences?page=2&size=25",
+                  "data":
+                    [
+                      {
+                        "id": "12345678-1234-1234-1234-1234567890ab",
+                        "name": "Experience Name",
+                        "tags": ["tag1", "tag2"],
+                      },
+                    ],
+                }
               schema:
                 $ref: "#/components/schemas/ListOfExperiencesResponse"
         default:
-          description: unexpected error
+          description: Unexpected error while getting experiences
           content:
             application/json:
               example:
@@ -103,7 +122,7 @@ paths:
               description: Id of the correlation
               schema:
                 type: string
-            Content-Location:
+            Location:
               example: "http://api.cvapp.com/v1/experiences/12345678-1234-1234-1234-1234567890ab"
               description: Link to the created experience
               schema:
@@ -112,7 +131,7 @@ paths:
           description: When create fails
           headers:
             X-CORRELATION-ID:
-              example: 12345678-1234-1234-1234-1234567890ab
+              example: "12345678-1234-1234-1234-1234567890ab"
               description: Id of the correlation of the create experience request
               schema:
                 type: string
@@ -143,7 +162,7 @@ paths:
             type: string
       responses:
         "200":
-          description: Expected response to a valid request
+          description: Expected response to a valid id
           headers:
             X-CORRELATION-ID:
               example: "12345678-1234-1234-1234-1234567890ab"
@@ -253,16 +272,19 @@ paths:
               description: Id of the correlation of the create tag request
               schema:
                 type: string
-            Content-Location:
+            Location:
               example: "http://api.cvapp.com/v1/tags/12345678-1234-1234-1234-1234567890ab"
               description: Link to the created tag
               schema:
                 type: string
+          content:
+            application/json:
+              example: "12345678-1234-1234-1234-1234567890ab"
         default:
           description: When create of a tag fails
           headers:
             X-CORRELATION-ID:
-              example: 12345678-1234-1234-1234-1234567890ab
+              example: "12345678-1234-1234-1234-1234567890ab"
               description: Id of the correlation of the create tag request error
               schema:
                 type: string
@@ -305,7 +327,7 @@ paths:
             type: string
       responses:
         "200":
-          description: Expected response to a valid request
+          description: Tag found by Id
           headers:
             X-CORRELATION-ID:
               example: "12345678-1234-1234-1234-1234567890ab"
@@ -367,25 +389,54 @@ components:
           items:
             type: string
     ListOfExperiencesResponse:
-      type: array
-      maxItems: 100
-      description: Array of experiences
+      type: object
+      description: A page of experiences and meta data
+      required:
+        - data
+      properties:
+        previous:
+          type: string
+          format: url
+          example: "http://api.cvapp.com/v1/experiences?page=1&size=25"
+        next:
+          type: string
+          format: url
+          example: "http://api.cvapp.com/v1/experiences?page=2&size=25"
+        data:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ExperienceResponse"
+          example:
+            {
+              "id": "12345678-1234-1234-1234-1234567890ab",
+              "name": "Experience Name",
+              "tags": ["tag1", "tag2"],
+            }
       example:
-        [
-          {
-            "id": "12345678-1234-1234-1234-1234567890ab",
-            "name": "Experience Name",
-            "tags": ["tag1", "tag2"],
-          },
-        ]
-      items:
-        $ref: "#/components/schemas/ExperienceResponse"
+        {
+          "previous": "http://api.cvapp.com/v1/experiences?page=1&size=25",
+          "next": "http://api.cvapp.com/v1/experiences?page=2&size=25",
+          "data":
+            [
+              {
+                "id": "12345678-1234-1234-1234-1234567890ab",
+                "name": "Experience Name",
+                "tags": ["tag1", "tag2"],
+              },
+            ],
+        }
     ExperienceResponse:
       description: An existing experience
       allOf:
         - $ref: "#/components/schemas/ObjectId"
         - $ref: "#/components/schemas/ExperiencePayload"
         - $ref: "#/components/schemas/TagArray"
+      example: >
+        {
+          "id": "12345678-1234-1234-1234-1234567890ab",
+          "name": "Experience Name",
+          "tags": ["tag1", "tag2"],
+        }
     CreateExperienceRequest:
       description: Request to create an experience
       allOf:
@@ -401,7 +452,7 @@ components:
       required:
         - tag
       description: A tag
-      example: tag1
+      example: { "tag": "tag-name" }
       properties:
         tag:
           example: tag1

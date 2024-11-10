@@ -13,10 +13,7 @@ import (
 )
 
 func (c *InServices) ListExperiences(ctx context.Context, command *in.ListExperienceCommand) (*[]model.Experience, error) {
-	log.Debugf("About to list Experiences, page %d size %d", command.Page, command.Size)
-	if command.Page < 0 {
-	}
-
+	log.Debugf("About to list Experiences, parameters %+v", command)
 	return nil, errors.New("not implemeted yet")
 }
 

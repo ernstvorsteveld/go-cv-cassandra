@@ -1,8 +1,10 @@
 package in
 
 type ListExperienceCommand struct {
-	Page int
-	Size int
+	Limit int32
+	Page  string
+	Tag   string
+	Name  string
 }
 
 type CreateExperienceCommand struct {
@@ -14,8 +16,15 @@ type GetExperienceCommand struct {
 	Id string
 }
 
-func NewListExperienceCommand(page int, size int) *ListExperienceCommand {
-	return &ListExperienceCommand{Page: page, Size: size}
+type ListExperienceParameters struct {
+	Limit int32
+	Page  string
+	Tag   string
+	Name  string
+}
+
+func NewListExperienceCommand(parms *ListExperienceParameters) *ListExperienceCommand {
+	return &ListExperienceCommand{Limit: parms.Limit, Page: parms.Page, Tag: parms.Tag, Name: parms.Name}
 }
 
 func NewCreateExperienceCommand(name string, tags []string) *CreateExperienceCommand {

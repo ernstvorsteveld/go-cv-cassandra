@@ -33,10 +33,10 @@ func (cs *CvApiHandler) ListExperiences(c *gin.Context, params ListExperiencesPa
 	slog.Debug("cv.ListExperiences", "content", "About to List Experiences", "correlationId", cId)
 	ctx := utils.NewDefaultContextWrapper(c, cId).Build()
 	listParams := &in.ListExperienceParameters{
-		Limit: int32(*params.Limit),
-		Page:  *params.Page,
-		Tag:   *params.Tag,
-		Name:  *params.Name,
+		Limit: params.Limit,
+		Page:  params.Page,
+		Tag:   params.Tag,
+		Name:  params.Name,
 	}
 	es, err := cs.u.ListExperiences(ctx, in.NewListExperienceCommand(listParams))
 	if err != nil {

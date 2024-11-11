@@ -1,6 +1,9 @@
 package out
 
-import "context"
+import (
+	"context"
+	"net/url"
+)
 
 type ExperienceDto struct {
 	id   string
@@ -34,10 +37,31 @@ func NewExperienceDto(id string, name string, tags []string) *ExperienceDto {
 	}
 }
 
+type GetParams struct {
+	Limit *int32
+	Page  *string
+	Tag   *string
+	Name  *string
+}
+
+type ExperiencePageReslt struct {
+	Next *url.URL
+	Prev *url.URL
+	Data []ExperienceDto
+}
+
+func NewExperiencePageReslt(next *url.URL, prev *url.URL, data []ExperienceDto) *ExperiencePageReslt {
+	return &ExperiencePageReslt{
+		Next: next,
+		Prev: prev,
+		Data: data,
+	}
+}
+
 type ExperienceDbPort interface {
 	Create(ctx context.Context, dto *ExperienceDto) error
 	Get(ctx context.Context, id string) (*ExperienceDto, error)
-	GetPage(ctx context.Context, page int32, size int16) ([]ExperienceDto, error)
+	GetPage(ctx context.Context, params *GetParams) (*ExperiencePageReslt, error)
 	Update(ctx context.Context, id string, dto *ExperienceDto) error
 	Delete(ctx context.Context, id string) (*ExperienceDto, error)
 }

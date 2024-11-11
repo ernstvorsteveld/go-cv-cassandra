@@ -44,7 +44,7 @@ func (m *MockExpDb) Get(ctx context.Context, id string) (*out.ExperienceDto, err
 	return res, nil
 }
 
-func (m *MockExpDb) GetPage(ctx context.Context, page int32, size int16) ([]out.ExperienceDto, error) {
+func (m *MockExpDb) GetPage(ctx context.Context, params *out.GetParams) (*out.ExperiencePageReslt, error) {
 	return nil, nil
 }
 

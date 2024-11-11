@@ -9,12 +9,20 @@ import (
 	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/in"
 	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/out"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
-	log "github.com/sirupsen/logrus"
 )
 
 func (c *InServices) ListExperiences(ctx context.Context, command *in.ListExperienceCommand) (*[]model.Experience, error) {
-	log.Debugf("About to list Experiences, parameters %+v", command)
+	slog.Debug("serivces.ListExperiences", "content", "About to List Experience", "command", command, "correlationId", utils.GetCorrelationId(ctx))
+	c.ep.GetPage(ctx, NewGetParams(command))
 	return nil, errors.New("not implemeted yet")
+}
+
+func NewGetParams(command *in.ListExperienceCommand) *out.GetParams {
+	return &out.GetParams{
+		Limit: command.Limit,
+		Page:  command.Page,
+		Tag:   command.Tag,
+		Name:  command.Name}
 }
 
 func (c *InServices) CreateExperience(ctx context.Context, command *in.CreateExperienceCommand) (*model.Experience, error) {

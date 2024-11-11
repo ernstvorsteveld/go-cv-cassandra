@@ -31,7 +31,7 @@ func (m *MockExperienceDbPort) Get(ctx context.Context, id string) (*out.Experie
 	return args.Get(1).(*out.ExperienceDto), args.Error(1)
 }
 
-func (m *MockExperienceDbPort) GetPage(ctx context.Context, page int32, size int16) ([]out.ExperienceDto, error) {
+func (m *MockExperienceDbPort) GetPage(ctx context.Context, params *out.GetParams) (*out.ExperiencePageReslt, error) {
 	return nil, nil
 }
 

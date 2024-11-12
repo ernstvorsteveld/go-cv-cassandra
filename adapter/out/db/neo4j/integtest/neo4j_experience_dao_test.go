@@ -117,6 +117,7 @@ func (s *Neo4jExperienceDaoSuite) Test_create_experience() {
 	dto, err := port.Get(ctx, uid)
 	assert.Nil(s.T(), err, "failed to get experience")
 	assert.Equal(s.T(), dto.GetName(), "name-1", "experience name is not equal")
+	assert.Equal(s.T(), dto.GetTags(), []string{"tag-1", "tag-2"}, "experience tags are not equal")
 }
 
 func (s *Neo4jExperienceDaoSuite) Test_get_experience() {

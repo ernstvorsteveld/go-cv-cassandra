@@ -66,7 +66,7 @@ func (new *Neo4jExperienceSession) Get(ctx context.Context, id string) (*out.Exp
 	slog.Debug("neo4j.Get", "content", "About to Get Experience by Id",
 		"id", id, "correlationId", utils.GetCorrelationId(ctx))
 
-	result, err := neo4j.ExecuteQuery(ctx, new.driver, `
+	expResult, err := neo4j.ExecuteQuery(ctx, new.driver, `
 		MATCH (p:Experience {id: $id}) RETURN p.id AS id, p.name AS name`,
 		map[string]any{
 			"id": id,
@@ -77,23 +77,49 @@ func (new *Neo4jExperienceSession) Get(ctx context.Context, id string) (*out.Exp
 		return nil, err
 	}
 	slog.Debug("neo4j.Get", "content", "Neo4j result get Experience",
-		"result", result.Summary.Counters().ContainsUpdates(),
+		"result", expResult.Summary.Counters().ContainsUpdates(),
 		"correlationId", utils.GetCorrelationId(ctx))
 
-	if len(result.Records) == 0 {
+	if len(expResult.Records) == 0 {
 		return nil, errors.New("experience not found")
 	}
-	if len(result.Records) > 1 {
+	if len(expResult.Records) > 1 {
 		return nil, errors.New("experience not unique")
 	}
 
-	x, _ := result.Records[0].Get("id")
-	y, _ := result.Records[0].Get("name")
+	// MATCH (:Movie {title: 'Wall Street'})<-[:ACTED_IN]-(actor:Person)
+	// RETURN actor.name AS actor
+
+	result, err := neo4j.ExecuteQuery(ctx, new.driver, `
+		MATCH (p:Experience {id: $id})<-[:HAS_EXPERIENCE]-(tag:Tag)
+		RETURN tag.name as tagName`,
+		map[string]any{
+			"id": id,
+		},
+		neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase("neo4j"))
+
+	slog.Debug("neo4j.GetTags", "content", "Neo4j result get Experience",
+		"result", result.Summary.Counters().ContainsUpdates(),
+		"correlationId", utils.GetCorrelationId(ctx))
+
+	x, _ := expResult.Records[0].Get("id")
+	y, _ := expResult.Records[0].Get("name")
+	tags := getTags(result.Records)
 	dto := out.NewExperienceDto(
 		x.(string),
-		y.(string), nil)
-	// get(result.Records, "tags").([]string))
+		y.(string),
+		tags)
 	return dto, nil
+}
+
+func getTags(records []*n.Record) []string {
+	var tags []string
+	for _, record := range records {
+		tag, _ := record.Get("tagName")
+		tags = append(tags, tag.(string))
+	}
+	return tags
 }
 
 func (cc *Neo4jExperienceSession) Update(ctx context.Context, id string, dto *out.ExperienceDto) error {

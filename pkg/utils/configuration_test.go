@@ -22,6 +22,12 @@ func Test_should_read_configuration(t *testing.T) {
 	assert.Equal(t, int8(3), c.DB.Cassandra.Retries, "The Retries is incorrect.")
 	assert.Equal(t, "cassandra", c.DB.Cassandra.Username, "The Username is incorrect.")
 	assert.Equal(t, "cassandra", c.DB.Cassandra.Secret.Value(), "The Secret is incorrect.")
+
+	// Neo4j
+	assert.Equal(t, "neo4j://localhost", c.DB.Neo4j.Url, "The Neo4j DB url is incorrect.")
+	assert.Equal(t, "7687", c.DB.Neo4j.Port, "The Neo4j Port url is incorrect.")
+	assert.Equal(t, "neo4j", c.DB.Neo4j.Username, "The Username is incorrect.")
+	assert.Equal(t, "Pass*w0rd!", c.DB.Neo4j.Secret.Value(), "The Secret is incorrect.")
 }
 
 func Test_should_read_configuration_use_environment(t *testing.T) {

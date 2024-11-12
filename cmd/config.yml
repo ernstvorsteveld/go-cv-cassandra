@@ -15,3 +15,8 @@ db:
     retries: 3
     username: cassandra
     secret: cassandra
+  neo4j:
+    url: neo4j://localhost
+    port: "7687"
+    username: neo4j
+    secret: Pass*w0rd!

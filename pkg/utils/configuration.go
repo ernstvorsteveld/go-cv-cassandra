@@ -18,6 +18,14 @@ type Configuration struct {
 
 type DBConfiguration struct {
 	Cassandra CassandraConfiguration
+	Neo4j     Neo4jConfiguration
+}
+
+type Neo4jConfiguration struct {
+	Url      string
+	Port     string
+	Username string
+	Secret   SensitiveInfo
 }
 
 type CassandraConfiguration struct {

@@ -23,12 +23,20 @@ var (
 	tDBPort            db.TagDbPort
 )
 
-type ExperienceDaoSuite struct {
+type CassandraExperienceDaoSuite struct {
 	suite.Suite
 }
 
-type TagDaoSuite struct {
+type CassndarTagDaoSuite struct {
 	suite.Suite
+}
+
+func Test_ExperienceDaoSuite(t *testing.T) {
+	suite.Run(t, &CassandraExperienceDaoSuite{})
+}
+
+func Test_TagDaoSuite(t *testing.T) {
+	suite.Run(t, &CassndarTagDaoSuite{})
 }
 
 func TestMain(m *testing.M) {
@@ -72,7 +80,7 @@ func TestMain(m *testing.M) {
 	cassandraContainer.Terminate(ctx)
 }
 
-func (s *ExperienceDaoSuite) Test_should_create_one_experience() {
+func (s *CassandraExperienceDaoSuite) Test_should_create_one_experience() {
 	t := s.T()
 	id := uuid.NewString()
 	name := "value1"
@@ -107,7 +115,7 @@ func insertExperience() (string, string, []string) {
 	return id, name, tags
 }
 
-func (s *ExperienceDaoSuite) Test_should_get_one_experience() {
+func (s *CassandraExperienceDaoSuite) Test_should_get_one_experience() {
 	t := s.T()
 	id, name, tags := insertExperience()
 
@@ -120,7 +128,7 @@ func (s *ExperienceDaoSuite) Test_should_get_one_experience() {
 	log.Infof("Experience: %v", d)
 }
 
-func (s *ExperienceDaoSuite) Test_should_update_one_experience() {
+func (s *CassandraExperienceDaoSuite) Test_should_update_one_experience() {
 	t := s.T()
 	id, _, _ := insertExperience()
 
@@ -145,17 +153,13 @@ func (s *ExperienceDaoSuite) Test_should_update_one_experience() {
 	assert.False(t, errors)
 }
 
-func (s *ExperienceDaoSuite) Test_should_not_find_experience_by_id() {
+func (s *CassandraExperienceDaoSuite) Test_should_not_find_experience_by_id() {
 	t := s.T()
 	_, err := eDBPort.Get(context.Background(), "not-existing-id")
 	assert.Equal(t, "not found", err.Error())
 }
 
-func Test_ExperienceDaoSuite(t *testing.T) {
-	suite.Run(t, &ExperienceDaoSuite{})
-}
-
-func (s *TagDaoSuite) Test_should_create_tag() {
+func (s *CassndarTagDaoSuite) Test_should_create_tag() {
 	t := s.T()
 	id := uuid.NewString()
 	name := "tag-name-value"
@@ -187,7 +191,7 @@ func insertTag() (string, string) {
 	return id, name
 }
 
-func (s *TagDaoSuite) Test_should_get_tag_by_id() {
+func (s *CassndarTagDaoSuite) Test_should_get_tag_by_id() {
 	t := s.T()
 	id, name := insertTag()
 
@@ -197,7 +201,7 @@ func (s *TagDaoSuite) Test_should_get_tag_by_id() {
 	assert.Equal(t, name, d.GetName())
 }
 
-func (s *TagDaoSuite) Test_should_delete_tag_by_id() {
+func (s *CassndarTagDaoSuite) Test_should_delete_tag_by_id() {
 	t := s.T()
 	id, name := insertTag()
 
@@ -205,8 +209,4 @@ func (s *TagDaoSuite) Test_should_delete_tag_by_id() {
 	assert.Nil(t, err)
 	assert.Equal(t, id, d.GetId())
 	assert.Equal(t, name, d.GetName())
-}
-
-func Test_TagDaoSuite(t *testing.T) {
-	suite.Run(t, &TagDaoSuite{})
 }

@@ -20,15 +20,33 @@ import (
 	tc "github.com/testcontainers/testcontainers-go/modules/neo4j"
 )
 
-type Neo4jExperienceDaoSuite struct {
-	suite.Suite
-}
-
 var (
 	Parts        []string
 	TestPassword string = "letmein!"
 	Driver       neo4j.DriverWithContext
+	Port         out.ExperienceDbPort
+
+	getPageTestData = []struct {
+		expName string
+		tags    []string
+	}{
+		{"name-1", []string{"tag-1"}},
+		{"name-1", []string{"tag-1"}},
+		{"name-8", []string{"tag-2", "tag-3", "tag-4"}},
+		{"name-9", []string{"tag-3", "tag-4", "tag-5"}},
+		{"name-10", []string{"tag-3", "tag-4", "tag-5"}},
+		{"name-11", []string{"tag-3", "tag-4", "tag-5"}},
+		{"name-12", []string{"tag-5"}},
+	}
 )
+
+type Neo4jExperienceDaoSuite struct {
+	suite.Suite
+}
+
+func Test_Neo4jExperienceDaoSuite(t *testing.T) {
+	suite.Run(t, &Neo4jExperienceDaoSuite{})
+}
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
@@ -52,7 +70,7 @@ func TestMain(m *testing.M) {
 	rawPort, _ := neo4jContainer.MappedPort(ctx, "7687")
 	Parts = strings.Split(rawPort.Port(), "/")
 
-	Driver = n.NewNeo4jConnection(&utils.Configuration{
+	Driver = n.NewNeo4jConnection(ctx, &utils.Configuration{
 		DB: utils.DBConfiguration{
 			Neo4j: utils.Neo4jConfiguration{
 				Url:      "neo4j://localhost",
@@ -63,11 +81,20 @@ func TestMain(m *testing.M) {
 		},
 	})
 
-	m.Run()
-}
+	Port = n.NewExperiencePort(
+		&utils.Configuration{
+			DB: utils.DBConfiguration{
+				Neo4j: utils.Neo4jConfiguration{
+					Url: "bolt://localhost:7687",
+				},
+			},
+		},
+		Driver,
+	)
 
-func Test_Neo4jExperienceDaoSuite(t *testing.T) {
-	suite.Run(t, &Neo4jExperienceDaoSuite{})
+	loadInitialData(ctx, Driver)
+
+	m.Run()
 }
 
 func (s *Neo4jExperienceDaoSuite) Test_create_experience() {
@@ -81,43 +108,13 @@ func (s *Neo4jExperienceDaoSuite) Test_create_experience() {
 	}()
 	assert.Nil(s.T(), err, "failed to create session")
 
-	port := n.NewExperiencePort(
-		&utils.Configuration{
-			DB: utils.DBConfiguration{
-				Neo4j: utils.Neo4jConfiguration{
-					Url: "bolt://localhost:7687",
-				},
-			},
-		},
-		Driver,
-	)
-
-	neo4j.ExecuteQuery(ctx, Driver,
-		"CREATE (p:Tag {id : $id, name: $name}) RETURN p",
-		map[string]any{
-			"id":   uuid.NewString(),
-			"name": "tag-1",
-		},
-		neo4j.EagerResultTransformer,
-		neo4j.ExecuteQueryWithDatabase("neo4j"))
-
-	neo4j.ExecuteQuery(ctx, Driver,
-		"CREATE (p:Tag {id : $id, name: $name}) RETURN p",
-		map[string]any{
-			"id":   uuid.NewString(),
-			"name": "tag-2",
-		},
-		neo4j.EagerResultTransformer,
-		neo4j.ExecuteQueryWithDatabase("neo4j"))
-
 	uid := uuid.NewString()
-	err = port.Create(ctx, out.NewExperienceDto(uid, "name-1", []string{"tag-1", "tag-2"}))
-	assert.Nil(s.T(), err, "failed to create experience")
+	Port.Create(ctx, out.NewExperienceDto(uid, "name-100", []string{"tag-1"}))
 
-	dto, err := port.Get(ctx, uid)
+	dto, err := Port.Get(ctx, uid)
 	assert.Nil(s.T(), err, "failed to get experience")
-	assert.Equal(s.T(), dto.GetName(), "name-1", "experience name is not equal")
-	assert.Equal(s.T(), dto.GetTags(), []string{"tag-1", "tag-2"}, "experience tags are not equal")
+	assert.Equal(s.T(), "name-100", dto.GetName(), "experience name is not equal")
+	assert.Equal(s.T(), []string{"tag-1"}, dto.GetTags(), "experience tags are not equal")
 }
 
 func (s *Neo4jExperienceDaoSuite) Test_get_experience() {
@@ -131,18 +128,38 @@ func (s *Neo4jExperienceDaoSuite) Test_get_experience() {
 	}()
 	assert.Nil(s.T(), err, "failed to create session")
 
-	port := n.NewExperiencePort(
-		&utils.Configuration{
-			DB: utils.DBConfiguration{
-				Neo4j: utils.Neo4jConfiguration{
-					Url: "bolt://localhost:7687",
-				},
-			},
-		},
-		Driver,
-	)
+	dto, err := Port.Get(ctx, ExpUids[0])
+	assert.Nil(s.T(), err, "failed to get experience")
+	assert.Equal(s.T(), dto.GetName(), "name-1", "experience name is not equal")
+	assert.Equal(s.T(), dto.GetTags(), []string{"tag-1"}, "experience tags are not equal")
+}
 
-	_, err = port.Get(ctx, "test")
+func (s *Neo4jExperienceDaoSuite) Test_get_page_experience() {
+
+	ctx := context.Background()
+	session := (Driver).NewSession(ctx, neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeWrite,
+	})
+	var err error
+	defer func() {
+		err = session.Close(ctx)
+	}()
+	assert.Nil(s.T(), err, "failed to create session")
+
+	limit := int32(2)
+	page := "0"
+	name := "name-1"
+	params := &out.GetParams{
+		Limit: &limit,
+		Page:  &page,
+		Tag:   nil,
+		Name:  &name,
+	}
+
+	result, err := Port.GetPage(ctx, params)
+	assert.Nil(s.T(), err, "failed to getPage experiences")
+	assert.Equal(s.T(), 1, len(result.Data), "page size is not equal")
+	assert.Equal(s.T(), "tag-1", result.Data[0].GetTags()[0], "experience tags are not equal")
 }
 
 func Test_create_connection(t *testing.T) {

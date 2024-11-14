@@ -3,6 +3,7 @@ package neo4j
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"github.com/ernstvorsteveld/go-cv-cassandra/domain/port/out"
 	"github.com/ernstvorsteveld/go-cv-cassandra/pkg/utils"
@@ -80,15 +81,12 @@ func (new *Neo4jExperienceSession) Get(ctx context.Context, id string) (*out.Exp
 		"result", expResult.Summary.Counters().ContainsUpdates(),
 		"correlationId", utils.GetCorrelationId(ctx))
 
-	if len(expResult.Records) == 0 {
+	if len(expResult.Records) <= 0 {
 		return nil, errors.New("experience not found")
 	}
 	if len(expResult.Records) > 1 {
 		return nil, errors.New("experience not unique")
 	}
-
-	// MATCH (:Movie {title: 'Wall Street'})<-[:ACTED_IN]-(actor:Person)
-	// RETURN actor.name AS actor
 
 	result, err := neo4j.ExecuteQuery(ctx, new.driver, `
 		MATCH (p:Experience {id: $id})<-[:HAS_EXPERIENCE]-(tag:Tag)
@@ -132,11 +130,82 @@ func (cc *Neo4jExperienceSession) Update(ctx context.Context, id string, dto *ou
 // Page  *string
 // Tag   *string
 // Name  *string
-func (cc *Neo4jExperienceSession) GetPage(ctx context.Context, params *out.GetParams) (*out.ExperiencePageReslt, error) {
+func (new *Neo4jExperienceSession) GetPage(ctx context.Context, params *out.GetParams) (*out.ExperiencePageReslt, error) {
 	slog.Debug("neo4j.GetPage", "content", "About to GetPage Experience",
 		"params", params, "correlationId", utils.GetCorrelationId(ctx))
 
-	return nil, nil
+	skip := getSkip(params)
+
+	result, err := neo4j.ExecuteQuery(ctx, new.driver, `
+		MATCH (p:Experience {name: $name})
+		ORDER BY p.name
+		LIMIT $limit
+		SKIP $skip
+		RETURN p.id AS id, p.name AS name`,
+		map[string]any{
+			"name":  *params.Name,
+			"limit": *params.Limit,
+			"skip":  skip,
+		},
+		neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase("neo4j"))
+	if err != nil {
+		return nil, err
+	}
+	if len(result.Records) <= 0 {
+		return nil, errors.New("experience not found")
+	}
+
+	slog.Debug("neo4j.GetPage", "content", "Neo4j result get Experience by page",
+		"result", result.Summary.Counters().ContainsUpdates(),
+		"correlationId", utils.GetCorrelationId(ctx))
+
+	dtos := make([]out.ExperienceDto, len(result.Records))
+	for index, _ := range result.Records {
+		x, _ := result.Records[index].Get("id")
+		y, _ := result.Records[0].Get("name")
+		tags, err := getTagsFromDb(ctx, new.driver, x.(string))
+		if err != nil {
+			return nil, err
+		}
+		dtos[index] = *out.NewExperienceDto(
+			x.(string),
+			y.(string),
+			tags)
+	}
+
+	return out.NewExperiencePageReslt(nil, nil, dtos), nil
+}
+
+func getTagsFromDb(ctx context.Context, driver neo4j.DriverWithContext, id string) ([]string, error) {
+	tags, err := neo4j.ExecuteQuery(ctx, driver, `
+		MATCH (p:Experience {id: $id})<-[:HAS_EXPERIENCE]-(tag:Tag)
+		RETURN tag.name as tagName`,
+		map[string]any{
+			"id": id,
+		},
+		neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase("neo4j"))
+	if err != nil {
+		return nil, err
+	}
+	result := make([]string, len(tags.Records))
+	for index, _ := range tags.Records {
+		t, _ := tags.Records[index].Get("tagName")
+		result[index] = t.(string)
+	}
+	return result, nil
+}
+
+func getSkip(p *out.GetParams) int {
+	if p.Page == nil {
+		return 0
+	}
+	page, err := strconv.Atoi(*p.Page)
+	if err != nil {
+		return 0
+	}
+	return page * int(*p.Limit)
 }
 
 func (cc *Neo4jExperienceSession) Delete(ctx context.Context, id string) (*out.ExperienceDto, error) {

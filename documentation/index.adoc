@@ -46,3 +46,10 @@ go test -v ./..
 # Runs a suite
 go test ./... -run ExperienceDaoSuite -v
 ----
+
+== Neo4j
+
+UI: http://localhost:7474
+db: neo4j
+user: neo4j
+password: letmein!
